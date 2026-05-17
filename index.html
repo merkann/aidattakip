@@ -3,1191 +3,1028 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AidatPro - Bina & Site Yönetim Sistemi</title>
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<title>AidatPro</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3d;
-  --border:#2a3550;--border2:#3a4d70;
-  --text:#e8edf5;--text2:#8a9bbf;--text3:#5a6b8a;
-  --accent:#4a9eff;--accent2:#2d7dd6;
-  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--purple:#a78bfa;
-  --radius:8px;--radius2:12px;
-}
-body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
-input,select,textarea{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);padding:8px 12px;font-family:inherit;font-size:13px;width:100%;outline:none;transition:border 0.15s}
+:root{--bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--border:#2a3550;--border2:#3a4d70;--text:#e8edf5;--text2:#8a9bbf;--text3:#5a6b8a;--accent:#4a9eff;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--purple:#a78bfa;--r:8px}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;display:flex;min-height:100vh}
+a,button{cursor:pointer}
+button{font-family:inherit;font-size:13px;font-weight:500;border:none;border-radius:var(--r);padding:7px 14px;transition:.15s}
+.bp{background:var(--accent);color:#fff}.bp:hover{filter:brightness(1.1)}
+.bg{background:transparent;color:var(--text2);border:1px solid var(--border)}.bg:hover{border-color:var(--border2);color:var(--text)}
+.bs{background:var(--green);color:#fff}.bs:hover{filter:brightness(1.1)}
+.bd{background:transparent;color:var(--red);border:1px solid #ef444433}.bd:hover{background:#ef444422}
+.bsm{padding:4px 9px;font-size:12px}
+input,select,textarea{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:var(--r);padding:7px 11px;font-family:inherit;font-size:13px;width:100%;outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--accent)}
-input::placeholder,textarea::placeholder{color:var(--text3)}
-button{font-family:inherit;cursor:pointer;border:none;border-radius:var(--radius);font-size:13px;font-weight:500;transition:all 0.15s;padding:8px 16px}
-.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}
-.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--border2);color:var(--text)}
-.btn-danger{background:transparent;color:var(--red);border:1px solid rgba(239,68,68,0.25)}.btn-danger:hover{background:rgba(239,68,68,0.1)}
-.btn-success{background:var(--green);color:#fff}.btn-success:hover{opacity:0.85}
-.btn-sm{padding:5px 10px;font-size:12px}
-.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
-.badge-green{background:rgba(34,197,94,0.15);color:var(--green)}
-.badge-red{background:rgba(239,68,68,0.15);color:var(--red)}
-.badge-amber{background:rgba(245,158,11,0.15);color:var(--amber)}
-.badge-blue{background:rgba(74,158,255,0.15);color:var(--accent)}
-.badge-purple{background:rgba(167,139,250,0.15);color:var(--purple)}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px}
-.table-wrap{overflow-x:auto}
+input::placeholder{color:var(--text3)}
+label{display:block;font-size:11px;font-weight:600;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+#sidebar{width:210px;background:var(--bg2);border-right:1px solid var(--border);padding:14px 10px;display:flex;flex-direction:column;gap:3px;position:fixed;top:0;left:0;bottom:0;z-index:10}
+.logo{display:flex;align-items:center;gap:8px;padding:8px;margin-bottom:10px}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
+.logo-text{font-size:13px;font-weight:600}
+.logo-sub{font-size:10px;color:var(--text3)}
+.bina-name{font-size:11px;color:var(--accent);font-weight:500;padding:0 8px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r);color:var(--text2);font-size:13px;font-weight:500;text-decoration:none;border:none;background:none;width:100%;text-align:left}
+.nav:hover{background:var(--bg3);color:var(--text)}
+.nav.active{background:#4a9eff22;color:var(--accent)}
+.nav svg{flex-shrink:0}
+.fb-status{margin-top:auto;padding:8px;border-top:1px solid var(--border)}
+.fb-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.fb-dot.on{background:var(--green);box-shadow:0 0 5px var(--green)}
+.fb-dot.off{background:var(--text3)}
+.fb-dot.spin{background:var(--amber);animation:p 1s infinite}
+.fb-dot.err{background:var(--red)}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+#main{margin-left:210px;flex:1;padding:22px;min-width:0}
+.page{display:none}.page.active{display:block}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.ph h1{font-size:19px;font-weight:600}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px}
+.stat-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:20px}
+.stat{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.stat-v{font-size:19px;font-weight:700;font-family:monospace}
+.stat-l{font-size:11px;color:var(--text3);margin-top:3px}
+.tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
-th{text-align:left;padding:10px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border)}
-td{padding:10px 12px;border-bottom:1px solid rgba(42,53,80,0.45);font-size:13px;vertical-align:middle}
-tr:last-child td{border-bottom:none}
+th{text-align:left;padding:9px 11px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+td{padding:9px 11px;border-bottom:1px solid #2a355044;font-size:13px;vertical-align:middle}
 tr:hover td{background:var(--bg3)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius2);padding:24px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto}
-.form-grid{display:grid;gap:14px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-label{display:block;font-size:11px;font-weight:500;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.3px}
-.section-title{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
-.stat-val{font-size:20px;font-weight:600;font-family:'IBM Plex Mono',monospace}
-.stat-lbl{font-size:11px;color:var(--text3);margin-top:4px}
-.nav-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:all 0.15s;border:none;background:none;width:100%;text-align:left}
-.nav-item:hover{background:var(--bg3);color:var(--text)}
-.nav-item.active{background:rgba(74,158,255,0.12);color:var(--accent)}
-.alert{padding:10px 14px;border-radius:var(--radius);font-size:13px}
-.alert-success{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--green)}
-.alert-error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red)}
-.alert-info{background:rgba(74,158,255,0.1);border:1px solid rgba(74,158,255,0.3);color:var(--accent)}
-.tab-bar{display:flex;gap:4px;background:var(--bg3);border-radius:var(--radius);padding:4px;margin-bottom:20px;flex-wrap:wrap}
-.tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border:none;background:none;transition:all 0.15s}
-.tab.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3)}
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:var(--bg)}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500}
+.bg-g{background:#22c55e22;color:var(--green)}
+.bg-r{background:#ef444422;color:var(--red)}
+.bg-a{background:#f59e0b22;color:var(--amber)}
+.bg-b{background:#4a9eff22;color:var(--accent)}
+.bg-p{background:#a78bfa22;color:var(--purple)}
+.mo{display:none;position:fixed;inset:0;background:#00000088;z-index:100;align-items:center;justify-content:center;padding:18px}
+.mo.open{display:flex}
+.mo-box{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:22px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto}
+.mo-box h2{font-size:15px;font-weight:600;margin-bottom:18px}
+.fg{display:grid;gap:13px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.st{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.7px;padding-bottom:5px;border-bottom:1px solid var(--border);margin-top:8px}
+.tabs{display:flex;gap:3px;background:var(--bg3);border-radius:var(--r);padding:3px;margin-bottom:18px;flex-wrap:wrap}
+.tab{padding:5px 13px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text2);border:none;background:none;cursor:pointer}
+.tab.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 3px #0004}
+.toast{display:none;position:fixed;top:16px;right:16px;z-index:999;padding:10px 14px;border-radius:var(--r);font-size:13px;min-width:280px}
+.toast.show{display:block}
+.t-ok{background:#22c55e18;border:1px solid #22c55e44;color:var(--green)}
+.t-err{background:#ef444418;border:1px solid #ef444444;color:var(--red)}
+.t-info{background:#4a9eff18;border:1px solid #4a9eff44;color:var(--accent)}
+.sr{position:relative}.sr input{padding-left:32px}
+.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-.search-box{position:relative}
-.search-box input{padding-left:34px}
-.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
-.fb-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.fb-dot.connected{background:var(--green);box-shadow:0 0 5px var(--green)}
-.fb-dot.disconnected{background:var(--text3)}
-.fb-dot.connecting{background:var(--amber);animation:fbpulse 1s infinite}
-.fb-dot.error{background:var(--red)}
-@keyframes fbpulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.sync-row{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:20px;border:1px solid var(--border);cursor:pointer;transition:border-color 0.15s}
-.sync-row:hover{border-color:var(--border2)}
-.loading-overlay{position:fixed;inset:0;background:rgba(15,17,23,0.9);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}
-.spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-code{font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.8;color:var(--text2)}
+.code-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;font-family:monospace;font-size:11px;color:var(--text2);line-height:1.8;overflow-x:auto;white-space:pre}
+.ldr{display:none;position:fixed;inset:0;background:#0f1117ee;z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+.ldr.show{display:flex}
+.spin-c{width:26px;height:26px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const {useState,useEffect,useRef,useCallback,createContext,useContext}=React;
 
-/* ─────────────── CONTEXT ─────────────── */
-const FBCtx=createContext({});
+<div id="loader" class="ldr">
+  <div class="spin-c"></div>
+  <div style="color:var(--text2);font-size:13px">Yükleniyor...</div>
+</div>
 
-/* ─────────────── LOCAL STORAGE ─────────────── */
-const LS={
-  get:(k)=>{try{return JSON.parse(localStorage.getItem('ap_'+k)||'null')}catch{return null}},
-  set:(k,v)=>{try{localStorage.setItem('ap_'+k,JSON.stringify(v))}catch{}},
-  init:(k,d)=>{if(LS.get(k)===null)LS.set(k,d);return LS.get(k)}
-};
+<div class="toast" id="toast"></div>
 
-const DEFAULT_KALEMLER=['Elektrik','Su','Doğalgaz','Asansör Bakım','Temizlik','Güvenlik','Bahçe Bakım','Hasar Onarım','Diğer'];
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="logo">
+    <div class="logo-icon">AP</div>
+    <div><div class="logo-text">AidatPro</div><div class="logo-sub">Yönetim Sistemi</div></div>
+  </div>
+  <div class="bina-name" id="bina-label">Bina / Site Adı</div>
+  <button class="nav active" onclick="go('dashboard')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Genel Bakış
+  </button>
+  <button class="nav" onclick="go('uyeler')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Üye / Daire
+  </button>
+  <button class="nav" onclick="go('tahsilat')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Tahsilat & Borç
+  </button>
+  <button class="nav" onclick="go('giderler')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Gider Kayıtları
+  </button>
+  <button class="nav" onclick="go('raporlar')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Raporlar
+  </button>
+  <button class="nav" onclick="go('import')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Excel Aktar
+  </button>
+  <button class="nav" onclick="go('settings')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Ayarlar
+  </button>
+  <div class="fb-status">
+    <span class="fb-dot off" id="fb-dot"></span>
+    <span style="font-size:11px;color:var(--text3)" id="fb-lbl">Yerel Depolama</span>
+  </div>
+</div>
 
-/* ─────────────── UTILS ─────────────── */
-const fmt=n=>Number(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-const today=()=>new Date().toISOString().split('T')[0];
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-const exportXL=(rows,name,hdrs)=>{
-  const ws=XLSX.utils.json_to_sheet(rows.map(r=>{const o={};hdrs.forEach(h=>{o[h.l]=r[h.k]});return o;}));
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Veri');
-  XLSX.writeFile(wb,name+'.xlsx');
-};
+<!-- MAIN -->
+<div id="main">
 
-/* ─────────────── ICONS ─────────────── */
-const IC={
-  home:<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>,
-  users:<><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></>,
-  cash:<><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></>,
-  report:<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></>,
-  plus:<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
-  edit:<><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
-  trash:<><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></>,
-  dl:<><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
-  ul:<><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>,
-  search:<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
-  x:<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
-  check:<polyline points="20 6 9 17 4 12"/>,
-  cog:<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></>,
-  money:<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></>,
-  archive:<><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></>,
-  cloud:<><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></>,
-  cloudOff:<><path d="M22.61 16.95A5 5 0 0018 10h-1.26a8 8 0 00-7.05-6M5 5a8 8 0 004 15h9a5 5 0 001.7-.3"/><line x1="1" y1="1" x2="23" y2="23"/></>,
-  bldg:<><path d="M6 22V4a2 2 0 012-2h8a2 2 0 012 2v18z"/><path d="M6 12H4a2 2 0 00-2 2v8h4"/><path d="M18 9h2a2 2 0 012 2v11h-4"/><line x1="10" y1="6" x2="10.01" y2="6"/><line x1="14" y1="6" x2="14.01" y2="6"/><line x1="10" y1="10" x2="10.01" y2="10"/><line x1="14" y1="10" x2="14.01" y2="10"/><line x1="10" y1="14" x2="10.01" y2="14"/><line x1="14" y1="14" x2="14.01" y2="14"/><line x1="10" y1="18" x2="10.01" y2="18"/><line x1="14" y1="18" x2="14.01" y2="18"/></>,
-};
-const Ico=({n,size=16,color})=>(
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{IC[n]}</svg>
-);
+<!-- DASHBOARD -->
+<div id="p-dashboard" class="page active">
+  <div class="ph"><h1>Genel Bakış</h1></div>
+  <div class="stat-g" id="dash-stats"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card"><div style="font-weight:600;margin-bottom:12px;font-size:13px">Son Tahsilatlar</div><div id="son-tahsilat"></div></div>
+    <div class="card"><div style="font-weight:600;margin-bottom:12px;font-size:13px">Son Borçlandırmalar</div><div id="son-borc"></div></div>
+  </div>
+</div>
 
-/* ─────────────── FIREBASE MANAGER ─────────────── */
-let fbApp=null,fbDB=null;
+<!-- UYELER -->
+<div id="p-uyeler" class="page">
+  <div class="ph">
+    <h1>Üye / Daire Yönetimi</h1>
+    <button class="bp" onclick="openUyeModal()">+ Yeni Üye Ekle</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-aktif" onclick="switchUyeTab('aktif')">Aktif</button>
+    <button class="tab" id="tab-arsiv" onclick="switchUyeTab('arsiv')">Arşiv</button>
+  </div>
+  <div class="sr" style="margin-bottom:13px;max-width:300px">
+    <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <input id="uye-search" placeholder="Ad veya daire no ara..." oninput="renderUyeler()">
+  </div>
+  <div class="card" style="padding:0"><div class="tw"><table id="uye-table">
+    <thead><tr><th>Daire</th><th>Ad Soyad</th><th>Telefon</th><th>Tip</th><th>Giriş</th><th>Kat Maliki</th><th>Durum</th><th></th></tr></thead>
+    <tbody id="uye-tbody"></tbody>
+  </table></div></div>
+</div>
 
-const FB={
-  init(cfg){
-    try{
-      if(fbApp){try{fbApp.delete()}catch{}}
-      fbApp=firebase.initializeApp(cfg,'aidatpro_'+Date.now());
-      fbDB=firebase.firestore(fbApp);
-      return true;
-    }catch(e){console.error(e);return false;}
-  },
-  col(name){return fbDB.collection(name);},
-  async getAll(col){const s=await FB.col(col).get();return s.docs.map(d=>({id:d.id,...d.data()}));},
-  async upsert(col,id,data){const {id:_,...rest}=data;await FB.col(col).doc(id).set(rest,{merge:true});},
-  async del(col,id){await FB.col(col).doc(id).delete();},
-  async setMeta(docId,data){await fbDB.collection('_meta').doc(docId).set(data);},
-  async getMeta(docId){const d=await fbDB.collection('_meta').doc(docId).get();return d.exists?d.data():null;},
-  listenCol(col,cb){return FB.col(col).onSnapshot(s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))));},
-  listenMeta(docId,cb){return fbDB.collection('_meta').doc(docId).onSnapshot(d=>{if(d.exists)cb(d.data());});},
-  dispose(){if(fbApp){try{fbApp.delete()}catch{}fbApp=null;fbDB=null;}}
-};
+<!-- TAHSİLAT -->
+<div id="p-tahsilat" class="page">
+  <div class="ph">
+    <h1>Tahsilat & Borçlandırma</h1>
+    <div style="display:flex;gap:8px">
+      <button class="bs" onclick="openTahModal('tahsilat')">+ Tahsilat Ekle</button>
+      <button class="bg" style="border-color:#f59e0b55;color:var(--amber)" onclick="openTahModal('borc')">+ Borçlandır</button>
+    </div>
+  </div>
+  <div class="sr" style="margin-bottom:13px;max-width:280px">
+    <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <input id="tah-search" placeholder="Daire no veya ad filtrele..." oninput="renderTahsilat()">
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-tah" onclick="switchTahTab('tahsilat')">Tahsilatlar</button>
+    <button class="tab" id="tab-bor" onclick="switchTahTab('borc')">Borçlandırmalar</button>
+    <button class="tab" id="tab-car" onclick="switchTahTab('cari')">Cari Durum</button>
+  </div>
+  <div id="tah-content"></div>
+</div>
 
-/* ─────────────── APP ─────────────── */
-function App(){
-  const [fbStatus,setFbStatus]=useState('off'); // off | connecting | connected | error
-  const [fbCfg,setFbCfg]=useState(null);
-  const [loading,setLoading]=useState(true);
-  const [data,setData]=useState({
-    uyeler:LS.init('uyeler',[]),
-    tahsilatlar:LS.init('tahsilatlar',[]),
-    borclar:LS.init('borclar',[]),
-    giderler:LS.init('giderler',[]),
-    giderKalemleri:LS.init('giderKalemleri',DEFAULT_KALEMLER),
-    settings:LS.init('settings',{binaAdi:'Bina / Site Adı',yil:new Date().getFullYear()})
-  });
-  const [page,setPage]=useState('dashboard');
-  const [toast,setToast]=useState(null);
-  const unsubs=useRef([]);
+<!-- GİDERLER -->
+<div id="p-giderler" class="page">
+  <div class="ph">
+    <h1>Gider Kayıtları</h1>
+    <div style="display:flex;gap:8px">
+      <button class="bg bsm" onclick="openKalemModal()">Kalem Listesi</button>
+      <button class="bg bsm" onclick="exportGider()">↓ Excel</button>
+      <button class="bp" onclick="openGiderModal()">+ Gider Ekle</button>
+    </div>
+  </div>
+  <div class="stat-g" id="gider-stats" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))"></div>
+  <div class="card" style="padding:0"><div class="tw"><table>
+    <thead><tr><th>Tarih</th><th>Kalem</th><th>Açıklama</th><th>Ödeme</th><th>Belge No</th><th>Tedarikçi</th><th>Tutar</th><th></th></tr></thead>
+    <tbody id="gider-tbody"></tbody>
+  </table></div></div>
+</div>
 
-  /* toast */
-  const showToast=useCallback((msg,type='success')=>{
-    setToast({msg,type});
-    setTimeout(()=>setToast(null),4000);
-  },[]);
+<!-- RAPORLAR -->
+<div id="p-raporlar" class="page">
+  <div class="ph">
+    <h1>Raporlar</h1>
+    <button class="bs" onclick="doExport()">↓ Excel'e Aktar</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-rcari" onclick="switchRapTab('cari')">Cari Durum</button>
+    <button class="tab" id="tab-rtah" onclick="switchRapTab('tahsilat')">Tahsilat</button>
+    <button class="tab" id="tab-rbor" onclick="switchRapTab('borc')">Borçlandırma</button>
+    <button class="tab" id="tab-rgid" onclick="switchRapTab('gider')">Gider</button>
+    <button class="tab" id="tab-rozet" onclick="switchRapTab('ozet')">Özet</button>
+  </div>
+  <div id="rap-content"></div>
+</div>
 
-  /* auto-connect on load */
-  useEffect(()=>{
-    const saved=LS.get('fbCfg');
-    if(saved?.apiKey&&saved?.projectId){connectFB(saved,true);}
-    else setLoading(false);
-  },[]);
+<!-- İMPORT -->
+<div id="p-import" class="page">
+  <div class="ph"><h1>Excel İçe / Dışa Aktar</h1></div>
+  <p style="color:var(--text3);font-size:13px;margin-bottom:18px">Şablonu indirin, doldurun ve sisteme yükleyin.</p>
+  <div class="tabs">
+    <button class="tab active" id="tab-iuye" onclick="switchImportTab('uye')">Üye Listesi</button>
+    <button class="tab" id="tab-itah" onclick="switchImportTab('tahsilat')">Tahsilat</button>
+    <button class="tab" id="tab-ibor" onclick="switchImportTab('borc')">Borçlandırma</button>
+    <button class="tab" id="tab-igid" onclick="switchImportTab('gider')">Gider</button>
+  </div>
+  <div class="card" style="max-width:520px">
+    <p id="import-desc" style="font-size:12px;color:var(--text3);margin-bottom:14px"></p>
+    <button class="bg" style="margin-bottom:14px;display:flex;align-items:center;gap:6px" onclick="dlTemplate()">↓ Şablon İndir (.xlsx)</button>
+    <div style="margin-bottom:12px"><label>Excel Dosyası Seçin</label><input type="file" accept=".xlsx,.xls" id="import-file" style="padding:6px;cursor:pointer"></div>
+    <button class="bs" onclick="doImport()" id="import-btn">↑ İçe Aktar</button>
+  </div>
+</div>
 
-  /* connect firebase */
-  const connectFB=async(cfg,silent=false)=>{
-    setFbStatus('connecting');
-    if(!silent)setLoading(true);
-    try{
-      const ok=FB.init(cfg);
-      if(!ok)throw new Error('Firebase init başarısız');
-      await FB.getAll('_meta'); // test connection
-      setFbCfg(cfg);
-      LS.set('fbCfg',cfg);
-      setFbStatus('connected');
-      showToast('Firebase bağlandı ✓ Veriler buluttan yükleniyor...','info');
-      setupListeners();
-    }catch(e){
-      setFbStatus('error');
-      showToast('Firebase hatası: '+e.message,'error');
-      console.error(e);
-    }finally{setLoading(false);}
-  };
-
-  const disconnectFB=()=>{
-    unsubs.current.forEach(u=>u&&u());
-    unsubs.current=[];
-    FB.dispose();
-    setFbStatus('off');
-    setFbCfg(null);
-    LS.set('fbCfg',null);
-    showToast('Firebase bağlantısı kesildi. Yerel depolama aktif.');
-  };
-
-  const setupListeners=()=>{
-    unsubs.current.forEach(u=>u&&u());
-    unsubs.current=[];
-    ['uyeler','tahsilatlar','borclar','giderler'].forEach(col=>{
-      const u=FB.listenCol(col,docs=>{
-        setData(p=>({...p,[col]:docs}));
-        LS.set(col,docs);
-      });
-      unsubs.current.push(u);
-    });
-    const u1=FB.listenMeta('settings',s=>{
-      setData(p=>({...p,settings:{...p.settings,...s}}));
-      LS.set('settings',{...LS.get('settings'),...s});
-    });
-    const u2=FB.listenMeta('giderKalemleri',d=>{
-      if(d?.list){setData(p=>({...p,giderKalemleri:d.list}));LS.set('giderKalemleri',d.list);}
-    });
-    unsubs.current.push(u1,u2);
-  };
-
-  /* saveItem – upserts one document */
-  const saveItem=useCallback(async(collection,item)=>{
-    // optimistic local
-    setData(p=>{
-      const list=p[collection];
-      const idx=list.findIndex(x=>x.id===item.id);
-      const next=idx>=0?list.map(x=>x.id===item.id?item:x):[...list,item];
-      LS.set(collection,next);
-      return{...p,[collection]:next};
-    });
-    if(fbStatus==='connected'&&fbDB){
-      try{await FB.upsert(collection,item.id,item);}
-      catch(e){showToast('Bulut kayıt hatası: '+e.message,'error');}
-    }
-  },[fbStatus]);
-
-  /* deleteItem */
-  const deleteItem=useCallback(async(collection,id)=>{
-    setData(p=>{
-      const next=p[collection].filter(x=>x.id!==id);
-      LS.set(collection,next);
-      return{...p,[collection]:next};
-    });
-    if(fbStatus==='connected'&&fbDB){
-      try{await FB.del(collection,id);}
-      catch(e){showToast('Bulut silme hatası: '+e.message,'error');}
-    }
-  },[fbStatus]);
-
-  /* update array or meta */
-  const update=useCallback(async(key,val)=>{
-    setData(p=>({...p,[key]:val}));
-    LS.set(key,val);
-    if(fbStatus==='connected'&&fbDB){
-      try{
-        if(key==='settings')await FB.setMeta('settings',val);
-        else if(key==='giderKalemleri')await FB.setMeta('giderKalemleri',{list:val});
-      }catch(e){showToast('Bulut güncelleme hatası: '+e.message,'error');}
-    }
-  },[fbStatus]);
-
-  const nav=[
-    {id:'dashboard',label:'Genel Bakış',icon:'home'},
-    {id:'uyeler',label:'Üye / Daire',icon:'users'},
-    {id:'tahsilat',label:'Tahsilat & Borç',icon:'cash'},
-    {id:'giderler',label:'Gider Kayıtları',icon:'money'},
-    {id:'raporlar',label:'Raporlar',icon:'report'},
-    {id:'import',label:'Excel Aktar',icon:'ul'},
-    {id:'settings',label:'Ayarlar',icon:'cog'},
-  ];
-
-  const ctx={fbStatus,connectFB,disconnectFB,fbCfg};
-
-  if(loading)return(
-    <div className="loading-overlay">
-      <div className="spinner"/>
-      <div style={{color:'var(--text2)',fontSize:13}}>
-        {fbStatus==='connecting'?'Firebase bağlanıyor...':'Yükleniyor...'}
+<!-- AYARLAR -->
+<div id="p-settings" class="page">
+  <div class="ph"><h1>Ayarlar</h1></div>
+  <div style="display:grid;gap:18px;max-width:580px">
+    <div class="card">
+      <div class="st" style="margin-top:0">Bina / Site Bilgileri</div>
+      <div class="fg" style="margin-top:12px">
+        <div><label>Bina / Site Adı</label><input id="s-bina" placeholder="Örn: Güneş Sitesi"></div>
+        <div><label>Adres</label><input id="s-adres" placeholder="Bina adresi"></div>
+        <div class="fr">
+          <div><label>Yönetici</label><input id="s-yon" placeholder="Ad Soyad"></div>
+          <div><label>Telefon</label><input id="s-tel" placeholder="0532..."></div>
+        </div>
+        <div class="fr">
+          <div><label>Standart Aidat (₺)</label><input id="s-aidat" type="number" placeholder="500"></div>
+          <div><label>Aktif Yıl</label><input id="s-yil" type="number" placeholder="2025"></div>
+        </div>
+        <div><button class="bp" onclick="saveBina()">Kaydet</button></div>
       </div>
     </div>
-  );
-
-  return(
-    <FBCtx.Provider value={ctx}>
-    <div style={{display:'flex',minHeight:'100vh'}}>
-      {/* SIDEBAR */}
-      <aside style={{width:220,background:'var(--bg2)',borderRight:'1px solid var(--border)',padding:'16px 12px',display:'flex',flexDirection:'column',gap:3,position:'fixed',top:0,left:0,bottom:0,zIndex:10}}>
-        <div style={{padding:'10px 8px 14px'}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-            <div style={{width:28,height:28,borderRadius:6,background:'var(--accent)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              <Ico n="bldg" size={14} color="#fff"/>
-            </div>
-            <div>
-              <div style={{fontSize:13,fontWeight:600}}>AidatPro</div>
-              <div style={{fontSize:10,color:'var(--text3)'}}>Yönetim Sistemi</div>
-            </div>
-          </div>
-          <div style={{fontSize:11,color:'var(--accent)',fontWeight:500,paddingLeft:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{data.settings.binaAdi}</div>
-        </div>
-        {nav.map(n=>(
-          <button key={n.id} className={`nav-item${page===n.id?' active':''}`} onClick={()=>setPage(n.id)}>
-            <Ico n={n.icon} size={15}/>{n.label}
-          </button>
-        ))}
-        {/* Firebase status */}
-        <div style={{marginTop:'auto',paddingTop:12,borderTop:'1px solid var(--border)'}}>
-          <div className="sync-row" onClick={()=>setPage('settings')}>
-            <span className={`fb-dot ${fbStatus==='connected'?'connected':fbStatus==='connecting'?'connecting':fbStatus==='error'?'error':'disconnected'}`}/>
-            <span style={{fontSize:11,color:fbStatus==='connected'?'var(--green)':fbStatus==='error'?'var(--red)':'var(--text3)',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-              {fbStatus==='connected'?'Firebase Aktif':fbStatus==='connecting'?'Bağlanıyor...':fbStatus==='error'?'Bağlantı Hatası':'Yerel Depolama'}
-            </span>
-          </div>
-        </div>
-      </aside>
-
-      {/* MAIN */}
-      <main style={{marginLeft:220,flex:1,padding:'24px',minWidth:0}}>
-        {toast&&(
-          <div className={`alert alert-${toast.type}`} style={{position:'fixed',top:16,right:16,zIndex:999,minWidth:300,maxWidth:440}}>
-            {toast.msg}
-          </div>
-        )}
-        {page==='dashboard'&&<Dashboard data={data}/>}
-        {page==='uyeler'&&<Uyeler data={data} saveItem={saveItem} deleteItem={deleteItem} showToast={showToast}/>}
-        {page==='tahsilat'&&<Tahsilat data={data} saveItem={saveItem} deleteItem={deleteItem} showToast={showToast}/>}
-        {page==='giderler'&&<Giderler data={data} update={update} saveItem={saveItem} deleteItem={deleteItem} showToast={showToast}/>}
-        {page==='raporlar'&&<Raporlar data={data}/>}
-        {page==='import'&&<Import data={data} saveItem={saveItem} showToast={showToast}/>}
-        {page==='settings'&&<Settings data={data} update={update} showToast={showToast}/>}
-      </main>
-    </div>
-    </FBCtx.Provider>
-  );
-}
-
-/* ─────────────── DASHBOARD ─────────────── */
-function Dashboard({data}){
-  const {uyeler,tahsilatlar,borclar,giderler}=data;
-  const aktif=uyeler.filter(u=>!u.cikisTarihi);
-  const totT=tahsilatlar.reduce((s,t)=>s+Number(t.tutar||0),0);
-  const totB=borclar.reduce((s,b)=>s+Number(b.tutar||0),0);
-  const totG=giderler.reduce((s,g)=>s+Number(g.tutar||0),0);
-  const bakiye=totT-totG;
-  const sonT=[...tahsilatlar].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||'')).slice(0,5);
-  const sonB=[...borclar].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||'')).slice(0,5);
-
-  return(
-    <div>
-      <h1 style={{fontSize:20,fontWeight:600,marginBottom:20}}>Genel Bakış</h1>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(155px,1fr))',gap:12,marginBottom:24}}>
-        {[
-          {lbl:'Aktif Üye/Daire',val:aktif.length,unit:'',color:'var(--accent)'},
-          {lbl:'Toplam Tahsilat',val:fmt(totT),unit:'₺',color:'var(--green)'},
-          {lbl:'Toplam Borç',val:fmt(totB),unit:'₺',color:'var(--amber)'},
-          {lbl:'Tahsil Edilmemiş',val:fmt(Math.max(0,totB-totT)),unit:'₺',color:'var(--red)'},
-          {lbl:'Toplam Gider',val:fmt(totG),unit:'₺',color:'var(--purple)'},
-          {lbl:'Kasa Bakiyesi',val:fmt(bakiye),unit:'₺',color:bakiye>=0?'var(--green)':'var(--red)'},
-        ].map((s,i)=>(
-          <div key={i} className="stat-card">
-            <div className="stat-val" style={{color:s.color,fontSize:18}}>{s.unit}{s.val}</div>
-            <div className="stat-lbl">{s.lbl}</div>
-          </div>
-        ))}
+    <div class="card">
+      <div class="st" style="margin-top:0">Firebase Bağlantısı</div>
+      <div id="fb-status-box" style="margin:12px 0;padding:8px 11px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border);font-size:12px;display:flex;align-items:center;gap:7px">
+        <span class="fb-dot off" id="fb-dot2"></span><span id="fb-status-txt" style="color:var(--text3)">Bağlı değil — veriler tarayıcı belleğinde</span>
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-        <div className="card">
-          <div style={{fontWeight:600,marginBottom:12,fontSize:13}}>Son Tahsilatlar</div>
-          {sonT.length===0?<p style={{color:'var(--text3)',fontSize:12}}>Henüz tahsilat yok</p>:
-          sonT.map((t,i)=>{const u=uyeler.find(x=>x.id===t.uyeId);return(
-            <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:'1px solid rgba(42,53,80,0.4)'}}>
-              <div><div style={{fontSize:12,fontWeight:500}}>{u?.ad||'?'} · D:{u?.daireNo||'?'}</div><div style={{fontSize:11,color:'var(--text3)'}}>{t.tarih} · {t.cesit}</div></div>
-              <div style={{fontFamily:'IBM Plex Mono',fontSize:13,color:'var(--green)'}}>+{fmt(t.tutar)}₺</div>
-            </div>
-          );})}
-        </div>
-        <div className="card">
-          <div style={{fontWeight:600,marginBottom:12,fontSize:13}}>Son Borçlandırmalar</div>
-          {sonB.length===0?<p style={{color:'var(--text3)',fontSize:12}}>Henüz borçlandırma yok</p>:
-          sonB.map((b,i)=>{const u=uyeler.find(x=>x.id===b.uyeId);return(
-            <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:'1px solid rgba(42,53,80,0.4)'}}>
-              <div><div style={{fontSize:12,fontWeight:500}}>{u?.ad||'?'} · D:{u?.daireNo||'?'}</div><div style={{fontSize:11,color:'var(--text3)'}}>{b.tarih} · {b.cesit}</div></div>
-              <div style={{fontFamily:'IBM Plex Mono',fontSize:13,color:'var(--amber)'}}>-{fmt(b.tutar)}₺</div>
-            </div>
-          );})}
-        </div>
+      <div id="fb-connected-box" style="display:none">
+        <div style="padding:10px 12px;background:#22c55e14;border:1px solid #22c55e33;border-radius:var(--r);font-size:12px;color:var(--green);margin-bottom:12px">✓ Bağlı proje: <strong id="fb-project-lbl"></strong></div>
+        <button class="bd" onclick="disconnectFB()">Firebase Bağlantısını Kes</button>
       </div>
-    </div>
-  );
-}
-
-/* ─────────────── UYELER ─────────────── */
-function Uyeler({data,saveItem,deleteItem,showToast}){
-  const [modal,setModal]=useState(false);
-  const [form,setForm]=useState({});
-  const [search,setSearch]=useState('');
-  const [tab,setTab]=useState('aktif');
-  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
-
-  const aktif=data.uyeler.filter(u=>!u.cikisTarihi);
-  const eski=data.uyeler.filter(u=>!!u.cikisTarihi);
-  const list=(tab==='aktif'?aktif:eski)
-    .filter(u=>u.ad?.toLowerCase().includes(search.toLowerCase())||String(u.daireNo||'').includes(search))
-    .sort((a,b)=>String(a.daireNo||'').localeCompare(String(b.daireNo||'')));
-
-  const openAdd=()=>{setForm({id:uid(),kayitTarihi:today()});setModal(true);};
-  const openEdit=u=>{setForm({...u});setModal(true);};
-
-  const save=async()=>{
-    if(!form.daireNo||!form.ad){showToast('Daire No ve Ad zorunludur!','error');return;}
-    await saveItem('uyeler',form);
-    showToast('Üye kaydedildi ✓');
-    setModal(false);
-  };
-
-  const cikisYap=id=>{
-    const d=prompt('Çıkış tarihi (YYYY-AA-GG):',today());
-    if(!d)return;
-    const u=data.uyeler.find(x=>x.id===id);
-    saveItem('uyeler',{...u,cikisTarihi:d});
-    showToast('Üye arşive taşındı.');
-  };
-
-  const sil=async id=>{
-    if(!confirm('Bu üyeyi silmek istediğinizden emin misiniz?'))return;
-    await deleteItem('uyeler',id);
-    showToast('Üye silindi');
-  };
-
-  return(
-    <div>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-        <h1 style={{fontSize:20,fontWeight:600}}>Üye / Daire Yönetimi</h1>
-        <button className="btn-primary" onClick={openAdd} style={{display:'flex',alignItems:'center',gap:6}}><Ico n="plus" size={14}/>Yeni Üye Ekle</button>
-      </div>
-      <div className="tab-bar">
-        <button className={`tab${tab==='aktif'?' active':''}`} onClick={()=>setTab('aktif')}>Aktif ({aktif.length})</button>
-        <button className={`tab${tab==='eski'?' active':''}`} onClick={()=>setTab('eski')}>Arşiv ({eski.length})</button>
-      </div>
-      <div style={{marginBottom:14}} className="search-box">
-        <span className="search-icon"><Ico n="search" size={14}/></span>
-        <input placeholder="Ad veya daire no ile ara..." value={search} onChange={e=>setSearch(e.target.value)}/>
-      </div>
-      <div className="card" style={{padding:0}}>
-        <div className="table-wrap"><table>
-          <thead><tr>
-            <th>Daire</th><th>Ad Soyad</th><th>Telefon</th><th>Tip</th><th>Giriş</th>
-            {tab==='eski'&&<th>Çıkış</th>}
-            <th>Kat Maliki</th><th>Durum</th><th></th>
-          </tr></thead>
-          <tbody>
-            {list.length===0&&<tr><td colSpan={9} style={{textAlign:'center',padding:32,color:'var(--text3)'}}>Kayıt bulunamadı</td></tr>}
-            {list.map(u=>(
-              <tr key={u.id}>
-                <td><span style={{fontFamily:'IBM Plex Mono',fontWeight:600,color:'var(--accent)'}}>{u.daireNo}</span></td>
-                <td style={{fontWeight:500}}>{u.ad}</td>
-                <td style={{fontFamily:'IBM Plex Mono',fontSize:12,color:'var(--text2)'}}>{u.telefon||'—'}</td>
-                <td style={{fontSize:12}}>{u.kullanımTipi||'—'}</td>
-                <td style={{fontSize:12,color:'var(--text2)'}}>{u.girisTarihi||'—'}</td>
-                {tab==='eski'&&<td style={{fontSize:12,color:'var(--red)'}}>{u.cikisTarihi}</td>}
-                <td style={{fontSize:12}}>{u.katMalikiAd||'—'}</td>
-                <td>{u.cikisTarihi?<span className="badge badge-red">Arşiv</span>:<span className="badge badge-green">Aktif</span>}</td>
-                <td><div style={{display:'flex',gap:5}}>
-                  <button className="btn-ghost btn-sm" onClick={()=>openEdit(u)} title="Düzenle"><Ico n="edit" size={12}/></button>
-                  {!u.cikisTarihi&&<button className="btn-ghost btn-sm" onClick={()=>cikisYap(u.id)} title="Çıkış Yap"><Ico n="archive" size={12}/></button>}
-                  <button className="btn-danger btn-sm" onClick={()=>sil(u.id)} title="Sil"><Ico n="trash" size={12}/></button>
-                </div></td>
-              </tr>
-            ))}
-          </tbody>
-        </table></div>
-      </div>
-
-      {modal&&(
-        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(false)}>
-          <div className="modal">
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <h2 style={{margin:0}}>{form.ad?'Üye Düzenle':'Yeni Üye Ekle'}</h2>
-              <button className="btn-ghost btn-sm" onClick={()=>setModal(false)}><Ico n="x" size={14}/></button>
-            </div>
-            <div className="form-grid">
-              <div className="section-title" style={{marginTop:0}}>Daire / Üye Bilgileri</div>
-              <div className="form-row">
-                <div><label>Daire / Üye No *</label><input value={form.daireNo||''} onChange={e=>f('daireNo',e.target.value)} placeholder="101"/></div>
-                <div><label>Ad Soyad *</label><input value={form.ad||''} onChange={e=>f('ad',e.target.value)} placeholder="Ahmet Yılmaz"/></div>
-              </div>
-              <div className="form-row">
-                <div><label>Telefon</label><input value={form.telefon||''} onChange={e=>f('telefon',e.target.value)} placeholder="0532 xxx xx xx"/></div>
-                <div><label>E-posta</label><input value={form.eposta||''} onChange={e=>f('eposta',e.target.value)} placeholder="ornek@mail.com"/></div>
-              </div>
-              <div><label>Adres</label><input value={form.adres||''} onChange={e=>f('adres',e.target.value)} placeholder="Daire adresi"/></div>
-              <div className="form-row">
-                <div><label>Giriş Tarihi</label><input type="date" value={form.girisTarihi||''} onChange={e=>f('girisTarihi',e.target.value)}/></div>
-                <div><label>Çıkış Tarihi</label><input type="date" value={form.cikisTarihi||''} onChange={e=>f('cikisTarihi',e.target.value)}/></div>
-              </div>
-              <div className="form-row">
-                <div><label>Kullanım Tipi</label>
-                  <select value={form.kullanımTipi||''} onChange={e=>f('kullanımTipi',e.target.value)}>
-                    <option value="">Seçin</option><option>Malik (Oturuyor)</option><option>Kiracı</option><option>Boş</option><option>İşyeri</option>
-                  </select>
-                </div>
-                <div><label>Aidat Tutarı (₺)</label><input type="number" value={form.aidatTutar||''} onChange={e=>f('aidatTutar',e.target.value)} placeholder="500"/></div>
-              </div>
-              <div className="section-title">Kat Maliki Bilgileri</div>
-              <div className="form-row">
-                <div><label>Kat Maliki Adı</label><input value={form.katMalikiAd||''} onChange={e=>f('katMalikiAd',e.target.value)} placeholder="Mehmet Kaya"/></div>
-                <div><label>Kat Maliki Telefon</label><input value={form.katMalikiTel||''} onChange={e=>f('katMalikiTel',e.target.value)} placeholder="0533 xxx xx xx"/></div>
-              </div>
-              <div><label>Kat Maliki Adres</label><input value={form.katMalikiAdres||''} onChange={e=>f('katMalikiAdres',e.target.value)} placeholder="Farklı adres varsa"/></div>
-              <div className="section-title">Ek Bilgiler</div>
-              <div className="form-row">
-                <div><label>IBAN</label><input value={form.iban||''} onChange={e=>f('iban',e.target.value)} placeholder="TR00 0000 0000 0000 0000 00"/></div>
-                <div><label>Araç Plakası</label><input value={form.plaka||''} onChange={e=>f('plaka',e.target.value)} placeholder="06 ABC 123"/></div>
-              </div>
-              <div><label>Serbest Açıklama</label><textarea rows={2} value={form.aciklama||''} onChange={e=>f('aciklama',e.target.value)} placeholder="Notlar, özel durumlar..."/></div>
-              <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:4}}>
-                <button className="btn-ghost" onClick={()=>setModal(false)}>İptal</button>
-                <button className="btn-primary" onClick={save}><Ico n="check" size={14}/> Kaydet</button>
-              </div>
-            </div>
-          </div>
+      <div id="fb-form-box">
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.7">Firebase Console → Proje Ayarları → Web App → Config'i aşağıya yapıştırın.</p>
+        <div style="margin-bottom:12px">
+          <label>firebaseConfig objesini yapıştırın</label>
+          <textarea id="fb-paste" rows="7" placeholder="const firebaseConfig = {&#10;  apiKey: &quot;AIzaSy...&quot;,&#10;  authDomain: &quot;...&quot;,&#10;  projectId: &quot;...&quot;,&#10;  storageBucket: &quot;...&quot;,&#10;  messagingSenderId: &quot;...&quot;,&#10;  appId: &quot;...&quot;&#10;};" style="font-family:monospace;font-size:11px"></textarea>
         </div>
-      )}
-    </div>
-  );
-}
-
-/* ─────────────── TAHSILAT ─────────────── */
-function Tahsilat({data,saveItem,deleteItem,showToast}){
-  const [tab,setTab]=useState('tahsilat');
-  const [modal,setModal]=useState(false);
-  const [form,setForm]=useState({});
-  const [filter,setFilter]=useState('');
-  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
-
-  const openModal=tip=>{setForm({id:uid(),tarih:today(),tip,cesit:tip==='tahsilat'?'Nakit':'Üye Aidat'});setModal(true);};
-
-  const save=async()=>{
-    if(!form.uyeId||!form.tutar){showToast('Üye ve tutar zorunludur!','error');return;}
-    const col=form.tip==='tahsilat'?'tahsilatlar':'borclar';
-    await saveItem(col,form);
-    showToast(form.tip==='tahsilat'?'Tahsilat kaydedildi ✓':'Borçlandırma kaydedildi ✓');
-    setModal(false);
-  };
-
-  const aktif=data.uyeler.filter(u=>!u.cikisTarihi).sort((a,b)=>String(a.daireNo||'').localeCompare(String(b.daireNo||'')));
-
-  const filt=list=>list.filter(t=>{
-    if(!filter)return true;
-    const u=data.uyeler.find(x=>x.id===t.uyeId);
-    return String(u?.daireNo||'')===filter||u?.ad?.toLowerCase().includes(filter.toLowerCase());
-  }).sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
-
-  return(
-    <div>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-        <h1 style={{fontSize:20,fontWeight:600}}>Tahsilat & Borçlandırma</h1>
-        <div style={{display:'flex',gap:8}}>
-          <button className="btn-success" onClick={()=>openModal('tahsilat')} style={{display:'flex',alignItems:'center',gap:6}}><Ico n="plus" size={14}/>Tahsilat Ekle</button>
-          <button className="btn-ghost" onClick={()=>openModal('borc')} style={{display:'flex',alignItems:'center',gap:6,borderColor:'rgba(245,158,11,0.4)',color:'var(--amber)'}}><Ico n="plus" size={14}/>Borçlandır</button>
-        </div>
-      </div>
-      <div style={{marginBottom:14,maxWidth:300}} className="search-box">
-        <span className="search-icon"><Ico n="search" size={14}/></span>
-        <input placeholder="Daire no veya ad filtrele..." value={filter} onChange={e=>setFilter(e.target.value)}/>
-      </div>
-      <div className="tab-bar">
-        <button className={`tab${tab==='tahsilat'?' active':''}`} onClick={()=>setTab('tahsilat')}>Tahsilatlar ({data.tahsilatlar.length})</button>
-        <button className={`tab${tab==='borc'?' active':''}`} onClick={()=>setTab('borc')}>Borçlandırmalar ({data.borclar.length})</button>
-        <button className={`tab${tab==='cari'?' active':''}`} onClick={()=>setTab('cari')}>Cari Durum</button>
-      </div>
-
-      {tab==='tahsilat'&&(
-        <div className="card" style={{padding:0}}>
-          <div className="table-wrap"><table>
-            <thead><tr><th>Tarih</th><th>Daire</th><th>Ad Soyad</th><th>Çeşit</th><th>Banka/Not</th><th>Tutar</th><th></th></tr></thead>
-            <tbody>
-              {filt(data.tahsilatlar).length===0&&<tr><td colSpan={7} style={{textAlign:'center',padding:32,color:'var(--text3)'}}>Tahsilat kaydı yok</td></tr>}
-              {filt(data.tahsilatlar).map(t=>{
-                const u=data.uyeler.find(x=>x.id===t.uyeId);
-                return(<tr key={t.id}>
-                  <td style={{fontSize:12,color:'var(--text2)'}}>{t.tarih}</td>
-                  <td><span style={{fontFamily:'IBM Plex Mono',fontWeight:600,color:'var(--accent)'}}>{u?.daireNo||'?'}</span></td>
-                  <td>{u?.ad||'?'}</td>
-                  <td><span className={`badge ${t.cesit==='Nakit'?'badge-green':t.cesit==='Mahsup'?'badge-purple':'badge-blue'}`}>{t.cesit}</span></td>
-                  <td style={{fontSize:12,color:'var(--text2)'}}>{t.banka||t.aciklama||'—'}</td>
-                  <td style={{fontFamily:'IBM Plex Mono',color:'var(--green)',fontWeight:600}}>+{fmt(t.tutar)}₺</td>
-                  <td><button className="btn-danger btn-sm" onClick={()=>{if(confirm('Silinsin mi?'))deleteItem('tahsilatlar',t.id)}}><Ico n="trash" size={12}/></button></td>
-                </tr>);
-              })}
-            </tbody>
-          </table></div>
-        </div>
-      )}
-
-      {tab==='borc'&&(
-        <div className="card" style={{padding:0}}>
-          <div className="table-wrap"><table>
-            <thead><tr><th>Tarih</th><th>Daire</th><th>Ad Soyad</th><th>Kalem</th><th>Dönem</th><th>Açıklama</th><th>Tutar</th><th></th></tr></thead>
-            <tbody>
-              {filt(data.borclar).length===0&&<tr><td colSpan={8} style={{textAlign:'center',padding:32,color:'var(--text3)'}}>Borçlandırma yok</td></tr>}
-              {filt(data.borclar).map(b=>{
-                const u=data.uyeler.find(x=>x.id===b.uyeId);
-                return(<tr key={b.id}>
-                  <td style={{fontSize:12,color:'var(--text2)'}}>{b.tarih}</td>
-                  <td><span style={{fontFamily:'IBM Plex Mono',fontWeight:600,color:'var(--accent)'}}>{u?.daireNo||'?'}</span></td>
-                  <td>{u?.ad||'?'}</td>
-                  <td><span className="badge badge-amber">{b.cesit}</span></td>
-                  <td style={{fontSize:12,color:'var(--text2)'}}>{b.donem||'—'}</td>
-                  <td style={{fontSize:12,color:'var(--text2)'}}>{b.aciklama||'—'}</td>
-                  <td style={{fontFamily:'IBM Plex Mono',color:'var(--amber)',fontWeight:600}}>-{fmt(b.tutar)}₺</td>
-                  <td><button className="btn-danger btn-sm" onClick={()=>{if(confirm('Silinsin mi?'))deleteItem('borclar',b.id)}}><Ico n="trash" size={12}/></button></td>
-                </tr>);
-              })}
-            </tbody>
-          </table></div>
-        </div>
-      )}
-
-      {tab==='cari'&&<CariDurum data={data}/>}
-
-      {modal&&(
-        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(false)}>
-          <div className="modal" style={{maxWidth:480}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <h2 style={{margin:0,color:form.tip==='tahsilat'?'var(--green)':'var(--amber)'}}>{form.tip==='tahsilat'?'Tahsilat Ekle':'Borçlandırma Ekle'}</h2>
-              <button className="btn-ghost btn-sm" onClick={()=>setModal(false)}><Ico n="x" size={14}/></button>
-            </div>
-            <div className="form-grid">
-              <div><label>Daire / Üye *</label>
-                <select value={form.uyeId||''} onChange={e=>f('uyeId',e.target.value)}>
-                  <option value="">— Seçin —</option>
-                  {aktif.map(u=><option key={u.id} value={u.id}>{u.daireNo} — {u.ad}</option>)}
-                </select>
-              </div>
-              <div className="form-row">
-                <div><label>Tarih</label><input type="date" value={form.tarih||''} onChange={e=>f('tarih',e.target.value)}/></div>
-                <div><label>Tutar (₺) *</label><input type="number" step="0.01" value={form.tutar||''} onChange={e=>f('tutar',e.target.value)} placeholder="0.00"/></div>
-              </div>
-              {form.tip==='tahsilat'?(
-                <>
-                  <div><label>Tahsilat Çeşidi</label>
-                    <select value={form.cesit||''} onChange={e=>f('cesit',e.target.value)}>
-                      <option>Nakit</option><option>Banka</option><option>Havale/EFT</option><option>Mahsup</option><option>Kredi Kartı</option>
-                    </select>
-                  </div>
-                  <div><label>Banka / Hesap</label><input value={form.banka||''} onChange={e=>f('banka',e.target.value)} placeholder="Ziraat, İş Bankası..."/></div>
-                </>
-              ):(
-                <>
-                  <div><label>Borç Kalemi</label>
-                    <select value={form.cesit||''} onChange={e=>f('cesit',e.target.value)}>
-                      <option>Üye Aidat</option><option>Yakıt</option><option>Demirbaş</option><option>Kapıcı Ücreti</option><option>Temizlik</option><option>Diğer</option>
-                    </select>
-                  </div>
-                  <div><label>Dönem</label><input value={form.donem||''} onChange={e=>f('donem',e.target.value)} placeholder="Ocak 2025"/></div>
-                </>
-              )}
-              <div><label>Açıklama / Not</label><input value={form.aciklama||''} onChange={e=>f('aciklama',e.target.value)} placeholder="Notlar..."/></div>
-              <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
-                <button className="btn-ghost" onClick={()=>setModal(false)}>İptal</button>
-                <button className={form.tip==='tahsilat'?'btn-success':'btn-primary'} onClick={save}>Kaydet</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ─────────────── CARİ DURUM ─────────────── */
-function CariDurum({data}){
-  const rows=data.uyeler.filter(u=>!u.cikisTarihi).map(u=>{
-    const borc=data.borclar.filter(b=>b.uyeId===u.id).reduce((s,b)=>s+Number(b.tutar||0),0);
-    const tahsilat=data.tahsilatlar.filter(t=>t.uyeId===u.id).reduce((s,t)=>s+Number(t.tutar||0),0);
-    return{...u,borc,tahsilat,kalan:borc-tahsilat};
-  }).sort((a,b)=>b.kalan-a.kalan);
-
-  const doExport=()=>exportXL(rows,'cari-durum',[
-    {k:'daireNo',l:'Daire No'},{k:'ad',l:'Ad Soyad'},{k:'telefon',l:'Telefon'},
-    {k:'katMalikiAd',l:'Kat Maliki'},{k:'borc',l:'Borç'},{k:'tahsilat',l:'Tahsilat'},{k:'kalan',l:'Kalan Borç'}
-  ]);
-
-  return(
-    <div>
-      <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}>
-        <button className="btn-ghost" onClick={doExport} style={{display:'flex',alignItems:'center',gap:6}}><Ico n="dl" size={14}/>Excel'e Aktar</button>
-      </div>
-      <div className="card" style={{padding:0}}>
-        <div className="table-wrap"><table>
-          <thead><tr><th>Daire</th><th>Ad Soyad</th><th>Toplam Borç</th><th>Tahsilat</th><th>Kalan</th><th>Durum</th></tr></thead>
-          <tbody>
-            {rows.length===0&&<tr><td colSpan={6} style={{textAlign:'center',padding:32,color:'var(--text3)'}}>Aktif üye yok</td></tr>}
-            {rows.map(u=>(
-              <tr key={u.id}>
-                <td><span style={{fontFamily:'IBM Plex Mono',color:'var(--accent)',fontWeight:600}}>{u.daireNo}</span></td>
-                <td>{u.ad}</td>
-                <td style={{fontFamily:'IBM Plex Mono',color:'var(--amber)'}}>{fmt(u.borc)}₺</td>
-                <td style={{fontFamily:'IBM Plex Mono',color:'var(--green)'}}>{fmt(u.tahsilat)}₺</td>
-                <td style={{fontFamily:'IBM Plex Mono',fontWeight:600,color:u.kalan>0?'var(--red)':u.kalan<0?'var(--green)':'var(--text2)'}}>{fmt(Math.abs(u.kalan))}₺</td>
-                <td>{u.kalan>0?<span className="badge badge-red">Borçlu</span>:u.kalan<0?<span className="badge badge-green">Alacaklı</span>:<span className="badge badge-blue">Sıfır</span>}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table></div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────── GİDERLER ─────────────── */
-function Giderler({data,update,saveItem,deleteItem,showToast}){
-  const [modal,setModal]=useState(false);
-  const [form,setForm]=useState({});
-  const [kalemModal,setKalemModal]=useState(false);
-  const [yeni,setYeni]=useState('');
-  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
-
-  const save=async()=>{
-    if(!form.kalem||!form.tutar){showToast('Kalem ve tutar zorunludur!','error');return;}
-    await saveItem('giderler',{id:form.id||uid(),tarih:form.tarih||today(),...form});
-    showToast('Gider kaydedildi ✓');
-    setModal(false);
-  };
-
-  const addKalem=()=>{
-    if(!yeni.trim())return;
-    update('giderKalemleri',[...data.giderKalemleri,yeni.trim()]);
-    setYeni('');showToast('Kalem eklendi');
-  };
-
-  const sorted=[...data.giderler].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
-  const total=data.giderler.reduce((s,g)=>s+Number(g.tutar||0),0);
-
-  return(
-    <div>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-        <h1 style={{fontSize:20,fontWeight:600}}>Gider Kayıtları</h1>
-        <div style={{display:'flex',gap:8}}>
-          <button className="btn-ghost btn-sm" onClick={()=>setKalemModal(true)}>Kalem Listesi</button>
-          <button className="btn-ghost btn-sm" onClick={()=>exportXL(sorted,'gider-raporu',[
-            {k:'tarih',l:'Tarih'},{k:'kalem',l:'Kalem'},{k:'aciklama',l:'Açıklama'},
-            {k:'odemeYontemi',l:'Ödeme'},{k:'belgeNo',l:'Belge No'},{k:'tedarikci',l:'Tedarikçi'},{k:'tutar',l:'Tutar'}
-          ])} style={{display:'flex',alignItems:'center',gap:5}}><Ico n="dl" size={13}/>Excel</button>
-          <button className="btn-primary" onClick={()=>{setForm({id:uid(),tarih:today()});setModal(true);}} style={{display:'flex',alignItems:'center',gap:6}}><Ico n="plus" size={14}/>Gider Ekle</button>
-        </div>
-      </div>
-
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:20}}>
-        <div className="stat-card"><div className="stat-val" style={{color:'var(--red)',fontSize:18}}>{fmt(total)}₺</div><div className="stat-lbl">Toplam Gider</div></div>
-        {['Elektrik','Su','Doğalgaz'].map(k=>{
-          const t=data.giderler.filter(g=>g.kalem===k).reduce((s,g)=>s+Number(g.tutar||0),0);
-          return t>0?<div key={k} className="stat-card"><div className="stat-val" style={{fontSize:16}}>{fmt(t)}₺</div><div className="stat-lbl">{k}</div></div>:null;
-        })}
-      </div>
-
-      <div className="card" style={{padding:0}}>
-        <div className="table-wrap"><table>
-          <thead><tr><th>Tarih</th><th>Gider Kalemi</th><th>Açıklama</th><th>Ödeme</th><th>Belge No</th><th>Tedarikçi</th><th>Tutar</th><th></th></tr></thead>
-          <tbody>
-            {sorted.length===0&&<tr><td colSpan={8} style={{textAlign:'center',padding:32,color:'var(--text3)'}}>Gider kaydı yok</td></tr>}
-            {sorted.map(g=>(
-              <tr key={g.id}>
-                <td style={{fontSize:12,color:'var(--text2)'}}>{g.tarih}</td>
-                <td><span className="badge badge-purple">{g.kalem}</span></td>
-                <td style={{fontSize:12}}>{g.aciklama||'—'}</td>
-                <td style={{fontSize:12,color:'var(--text2)'}}>{g.odemeYontemi||'—'}</td>
-                <td style={{fontFamily:'IBM Plex Mono',fontSize:11,color:'var(--text3)'}}>{g.belgeNo||'—'}</td>
-                <td style={{fontSize:12}}>{g.tedarikci||'—'}</td>
-                <td style={{fontFamily:'IBM Plex Mono',color:'var(--red)',fontWeight:600}}>{fmt(g.tutar)}₺</td>
-                <td><button className="btn-danger btn-sm" onClick={()=>{if(confirm('Silinsin mi?'))deleteItem('giderler',g.id)}}><Ico n="trash" size={12}/></button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table></div>
-      </div>
-
-      {modal&&(
-        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(false)}>
-          <div className="modal" style={{maxWidth:480}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <h2 style={{margin:0}}>Gider Ekle</h2>
-              <button className="btn-ghost btn-sm" onClick={()=>setModal(false)}><Ico n="x" size={14}/></button>
-            </div>
-            <div className="form-grid">
-              <div className="form-row">
-                <div><label>Tarih</label><input type="date" value={form.tarih||''} onChange={e=>f('tarih',e.target.value)}/></div>
-                <div><label>Tutar (₺) *</label><input type="number" step="0.01" value={form.tutar||''} onChange={e=>f('tutar',e.target.value)}/></div>
-              </div>
-              <div><label>Gider Kalemi *</label>
-                <select value={form.kalem||''} onChange={e=>f('kalem',e.target.value)}>
-                  <option value="">— Seçin —</option>
-                  {data.giderKalemleri.map(k=><option key={k}>{k}</option>)}
-                </select>
-              </div>
-              <div className="form-row">
-                <div><label>Ödeme Yöntemi</label>
-                  <select value={form.odemeYontemi||''} onChange={e=>f('odemeYontemi',e.target.value)}>
-                    <option value="">Seçin</option><option>Nakit</option><option>Banka</option><option>Havale/EFT</option><option>Kredi Kartı</option>
-                  </select>
-                </div>
-                <div><label>Belge / Fatura No</label><input value={form.belgeNo||''} onChange={e=>f('belgeNo',e.target.value)} placeholder="F-2025-001"/></div>
-              </div>
-              <div><label>Tedarikçi / Firma</label><input value={form.tedarikci||''} onChange={e=>f('tedarikci',e.target.value)} placeholder="Firma adı"/></div>
-              <div><label>Açıklama</label><textarea rows={2} value={form.aciklama||''} onChange={e=>f('aciklama',e.target.value)} placeholder="Notlar..."/></div>
-              <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
-                <button className="btn-ghost" onClick={()=>setModal(false)}>İptal</button>
-                <button className="btn-primary" onClick={save}>Kaydet</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {kalemModal&&(
-        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setKalemModal(false)}>
-          <div className="modal" style={{maxWidth:360}}>
-            <h2>Gider Kalemleri</h2>
-            <div style={{display:'flex',gap:8,marginBottom:14}}>
-              <input value={yeni} onChange={e=>setYeni(e.target.value)} placeholder="Yeni kalem..." onKeyDown={e=>e.key==='Enter'&&addKalem()}/>
-              <button className="btn-primary btn-sm" onClick={addKalem}>Ekle</button>
-            </div>
-            {data.giderKalemleri.map((k,i)=>(
-              <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid rgba(42,53,80,0.4)'}}>
-                <span style={{fontSize:13}}>{k}</span>
-                <button className="btn-danger btn-sm" onClick={()=>{if(confirm('Silinsin mi?'))update('giderKalemleri',data.giderKalemleri.filter((_,j)=>j!==i))}}><Ico n="trash" size={11}/></button>
-              </div>
-            ))}
-            <div style={{textAlign:'right',marginTop:12}}><button className="btn-ghost" onClick={()=>setKalemModal(false)}>Kapat</button></div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ─────────────── RAPORLAR ─────────────── */
-function Raporlar({data}){
-  const [tip,setTip]=useState('cari');
-
-  const doExport=()=>{
-    if(tip==='cari'){
-      const rows=data.uyeler.filter(u=>!u.cikisTarihi).map(u=>{
-        const borc=data.borclar.filter(b=>b.uyeId===u.id).reduce((s,b)=>s+Number(b.tutar||0),0);
-        const tahsilat=data.tahsilatlar.filter(t=>t.uyeId===u.id).reduce((s,t)=>s+Number(t.tutar||0),0);
-        return{daireNo:u.daireNo,ad:u.ad,telefon:u.telefon||'',katMalikiAd:u.katMalikiAd||'',borc,tahsilat,kalan:borc-tahsilat};
-      });
-      exportXL(rows,'cari-raporu',[
-        {k:'daireNo',l:'Daire No'},{k:'ad',l:'Ad Soyad'},{k:'telefon',l:'Telefon'},
-        {k:'katMalikiAd',l:'Kat Maliki'},{k:'borc',l:'Borç'},{k:'tahsilat',l:'Tahsilat'},{k:'kalan',l:'Kalan Borç'}
-      ]);
-    } else if(tip==='tahsilat'){
-      const rows=data.tahsilatlar.map(t=>{const u=data.uyeler.find(x=>x.id===t.uyeId)||{};return{tarih:t.tarih,daireNo:u.daireNo,ad:u.ad,cesit:t.cesit,banka:t.banka,aciklama:t.aciklama,tutar:t.tutar};});
-      exportXL(rows,'tahsilat-raporu',[{k:'tarih',l:'Tarih'},{k:'daireNo',l:'Daire'},{k:'ad',l:'Ad Soyad'},{k:'cesit',l:'Çeşit'},{k:'banka',l:'Banka'},{k:'aciklama',l:'Açıklama'},{k:'tutar',l:'Tutar'}]);
-    } else if(tip==='borc'){
-      const rows=data.borclar.map(b=>{const u=data.uyeler.find(x=>x.id===b.uyeId)||{};return{tarih:b.tarih,daireNo:u.daireNo,ad:u.ad,cesit:b.cesit,donem:b.donem,aciklama:b.aciklama,tutar:b.tutar};});
-      exportXL(rows,'borc-raporu',[{k:'tarih',l:'Tarih'},{k:'daireNo',l:'Daire'},{k:'ad',l:'Ad Soyad'},{k:'cesit',l:'Kalem'},{k:'donem',l:'Dönem'},{k:'aciklama',l:'Açıklama'},{k:'tutar',l:'Tutar'}]);
-    } else if(tip==='gider'){
-      const rows=[...data.giderler].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
-      exportXL(rows,'gider-raporu',[{k:'tarih',l:'Tarih'},{k:'kalem',l:'Kalem'},{k:'aciklama',l:'Açıklama'},{k:'odemeYontemi',l:'Ödeme'},{k:'belgeNo',l:'Belge No'},{k:'tedarikci',l:'Tedarikçi'},{k:'tutar',l:'Tutar'}]);
-    }
-  };
-
-  const gelirKalemler=data.borclar.reduce((acc,b)=>{acc[b.cesit]=(acc[b.cesit]||0)+Number(b.tutar||0);return acc;},{});
-  const giderOzet=data.giderKalemleri.map(k=>({k,t:data.giderler.filter(g=>g.kalem===k).reduce((s,g)=>s+Number(g.tutar||0),0)})).filter(x=>x.t>0);
-
-  return(
-    <div>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-        <h1 style={{fontSize:20,fontWeight:600}}>Raporlar</h1>
-        <button className="btn-success" onClick={doExport} style={{display:'flex',alignItems:'center',gap:6}}><Ico n="dl" size={14}/>Excel'e Aktar</button>
-      </div>
-      <div className="tab-bar">
-        <button className={`tab${tip==='cari'?' active':''}`} onClick={()=>setTip('cari')}>Cari Durum</button>
-        <button className={`tab${tip==='tahsilat'?' active':''}`} onClick={()=>setTip('tahsilat')}>Tahsilat</button>
-        <button className={`tab${tip==='borc'?' active':''}`} onClick={()=>setTip('borc')}>Borçlandırma</button>
-        <button className={`tab${tip==='gider'?' active':''}`} onClick={()=>setTip('gider')}>Gider</button>
-        <button className={`tab${tip==='ozet'?' active':''}`} onClick={()=>setTip('ozet')}>Gelir/Gider Özet</button>
-      </div>
-
-      {tip==='cari'&&<CariDurum data={data}/>}
-
-      {tip==='tahsilat'&&(
-        <div className="card" style={{padding:0}}>
-          <div className="table-wrap"><table>
-            <thead><tr><th>Tarih</th><th>Daire</th><th>Ad Soyad</th><th>Çeşit</th><th>Tutar</th></tr></thead>
-            <tbody>
-              {[...data.tahsilatlar].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||'')).map(t=>{
-                const u=data.uyeler.find(x=>x.id===t.uyeId);
-                return(<tr key={t.id}><td style={{fontSize:12}}>{t.tarih}</td><td style={{fontFamily:'IBM Plex Mono',color:'var(--accent)'}}>{u?.daireNo||'?'}</td><td>{u?.ad||'?'}</td><td><span className="badge badge-blue">{t.cesit}</span></td><td style={{fontFamily:'IBM Plex Mono',color:'var(--green)',fontWeight:600}}>{fmt(t.tutar)}₺</td></tr>);
-              })}
-            </tbody>
-          </table></div>
-        </div>
-      )}
-
-      {tip==='borc'&&(
-        <div className="card" style={{padding:0}}>
-          <div className="table-wrap"><table>
-            <thead><tr><th>Tarih</th><th>Daire</th><th>Ad Soyad</th><th>Kalem</th><th>Dönem</th><th>Tutar</th></tr></thead>
-            <tbody>
-              {[...data.borclar].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||'')).map(b=>{
-                const u=data.uyeler.find(x=>x.id===b.uyeId);
-                return(<tr key={b.id}><td style={{fontSize:12}}>{b.tarih}</td><td style={{fontFamily:'IBM Plex Mono',color:'var(--accent)'}}>{u?.daireNo||'?'}</td><td>{u?.ad||'?'}</td><td><span className="badge badge-amber">{b.cesit}</span></td><td style={{fontSize:12,color:'var(--text2)'}}>{b.donem||'—'}</td><td style={{fontFamily:'IBM Plex Mono',color:'var(--amber)',fontWeight:600}}>{fmt(b.tutar)}₺</td></tr>);
-              })}
-            </tbody>
-          </table></div>
-        </div>
-      )}
-
-      {tip==='gider'&&(
-        <div className="card" style={{padding:0}}>
-          <div className="table-wrap"><table>
-            <thead><tr><th>Tarih</th><th>Kalem</th><th>Açıklama</th><th>Tedarikçi</th><th>Tutar</th></tr></thead>
-            <tbody>
-              {[...data.giderler].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||'')).map(g=>(
-                <tr key={g.id}><td style={{fontSize:12}}>{g.tarih}</td><td><span className="badge badge-purple">{g.kalem}</span></td><td style={{fontSize:12}}>{g.aciklama||'—'}</td><td style={{fontSize:12}}>{g.tedarikci||'—'}</td><td style={{fontFamily:'IBM Plex Mono',color:'var(--red)',fontWeight:600}}>{fmt(g.tutar)}₺</td></tr>
-              ))}
-            </tbody>
-          </table></div>
-        </div>
-      )}
-
-      {tip==='ozet'&&(
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-          <div className="card">
-            <div style={{fontWeight:600,marginBottom:12}}>Gelir Kalemleri (Borçlandırma)</div>
-            {Object.entries(gelirKalemler).map(([k,v],i)=>(
-              <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid rgba(42,53,80,0.4)'}}>
-                <span style={{fontSize:13}}>{k}</span><span style={{fontFamily:'IBM Plex Mono',fontSize:13,color:'var(--amber)'}}>{fmt(v)}₺</span>
-              </div>
-            ))}
-            <div style={{display:'flex',justifyContent:'space-between',padding:'8px 0',marginTop:4,borderTop:'1px solid var(--border)',fontWeight:600}}>
-              <span style={{fontSize:13}}>Toplam</span><span style={{fontFamily:'IBM Plex Mono',fontSize:13,color:'var(--amber)'}}>{fmt(Object.values(gelirKalemler).reduce((s,v)=>s+v,0))}₺</span>
-            </div>
-          </div>
-          <div className="card">
-            <div style={{fontWeight:600,marginBottom:12}}>Gider Kalemleri</div>
-            {giderOzet.map(({k,t},i)=>(
-              <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid rgba(42,53,80,0.4)'}}>
-                <span style={{fontSize:13}}>{k}</span><span style={{fontFamily:'IBM Plex Mono',fontSize:13,color:'var(--red)'}}>{fmt(t)}₺</span>
-              </div>
-            ))}
-            <div style={{display:'flex',justifyContent:'space-between',padding:'8px 0',marginTop:4,borderTop:'1px solid var(--border)',fontWeight:600}}>
-              <span style={{fontSize:13}}>Toplam</span><span style={{fontFamily:'IBM Plex Mono',fontSize:13,color:'var(--red)'}}>{fmt(giderOzet.reduce((s,x)=>s+x.t,0))}₺</span>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ─────────────── IMPORT ─────────────── */
-function Import({data,saveItem,showToast}){
-  const [tab,setTab]=useState('uye');
-  const [busy,setBusy]=useState(false);
-  const fileRef=useRef();
-
-  const dlTemplate=tip=>{
-    const T={
-      uye:{h:['DaireNo','AdSoyad','Telefon','Eposta','Adres','GirisTarihi','KullanımTipi','AidatTutar','KatMalikiAd','KatMalikiTel','Aciklama'],r:[['101','Ahmet Yılmaz','0532 111 22 33','ahmet@mail.com','Daire adresi','2024-01-01','Kiracı',500,'Mehmet Kaya','0533 444 55 66','Not']]},
-      tahsilat:{h:['DaireNo','Tarih','Tutar','TahsilatCesidi','Banka','Aciklama'],r:[['101','2025-01-15',500,'Banka','Ziraat','Ocak ödemesi']]},
-      borc:{h:['DaireNo','Tarih','Tutar','BorcKalemi','Donem','Aciklama'],r:[['101','2025-01-01',500,'Üye Aidat','Ocak 2025','']]},
-      gider:{h:['Tarih','GiderKalemi','Tutar','OdemeYontemi','BelgeNo','Tedarikci','Aciklama'],r:[['2025-01-10','Elektrik',1200,'Banka','F-001','TEDAŞ','Ocak faturası']]},
-    };
-    const t=T[tip];
-    const ws=XLSX.utils.aoa_to_sheet([t.h,...t.r]);
-    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Şablon');
-    XLSX.writeFile(wb,'sablon-'+tip+'.xlsx');
-  };
-
-  const doImport=async()=>{
-    const file=fileRef.current?.files?.[0];
-    if(!file){showToast('Dosya seçin!','error');return;}
-    setBusy(true);
-    const reader=new FileReader();
-    reader.onload=async e=>{
-      try{
-        const wb=XLSX.read(e.target.result,{type:'binary'});
-        const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-        let count=0;
-        if(tab==='uye'){
-          for(const r of rows){await saveItem('uyeler',{id:uid(),daireNo:String(r.DaireNo||''),ad:r.AdSoyad||'',telefon:String(r.Telefon||''),eposta:r.Eposta||'',adres:r.Adres||'',girisTarihi:String(r.GirisTarihi||''),kullanımTipi:r.KullanımTipi||'',aidatTutar:Number(r.AidatTutar||0),katMalikiAd:r.KatMalikiAd||'',katMalikiTel:String(r.KatMalikiTel||''),aciklama:r.Aciklama||'',kayitTarihi:today()});count++;}
-        } else if(tab==='tahsilat'){
-          for(const r of rows){const u=data.uyeler.find(x=>x.daireNo===String(r.DaireNo));await saveItem('tahsilatlar',{id:uid(),uyeId:u?.id||'',tarih:String(r.Tarih||today()),tutar:Number(r.Tutar||0),cesit:r.TahsilatCesidi||'Banka',banka:r.Banka||'',aciklama:r.Aciklama||''});count++;}
-        } else if(tab==='borc'){
-          for(const r of rows){const u=data.uyeler.find(x=>x.daireNo===String(r.DaireNo));await saveItem('borclar',{id:uid(),uyeId:u?.id||'',tarih:String(r.Tarih||today()),tutar:Number(r.Tutar||0),cesit:r.BorcKalemi||'Üye Aidat',donem:r.Donem||'',aciklama:r.Aciklama||''});count++;}
-        } else {
-          for(const r of rows){await saveItem('giderler',{id:uid(),tarih:String(r.Tarih||today()),kalem:r.GiderKalemi||'Diğer',tutar:Number(r.Tutar||0),odemeYontemi:r.OdemeYontemi||'',belgeNo:r.BelgeNo||'',tedarikci:r.Tedarikci||'',aciklama:r.Aciklama||''});count++;}
-        }
-        showToast(`${count} kayıt başarıyla aktarıldı ✓`);
-        if(fileRef.current)fileRef.current.value='';
-      }catch(err){showToast('Aktarma hatası: '+err.message,'error');}
-      finally{setBusy(false);}
-    };
-    reader.readAsBinaryString(file);
-  };
-
-  const tabs=[{id:'uye',label:'Üye / Daire Listesi'},{id:'tahsilat',label:'Banka Ekstresi / Tahsilat'},{id:'borc',label:'Toplu Borçlandırma'},{id:'gider',label:'Gider Listesi'}];
-
-  return(
-    <div>
-      <h1 style={{fontSize:20,fontWeight:600,marginBottom:8}}>Excel İçe / Dışa Aktar</h1>
-      <p style={{color:'var(--text3)',fontSize:13,marginBottom:20}}>Şablonu indirin, doldurun ve sisteme yükleyin. Daire numaraları eşleştirme için kullanılır.</p>
-      <div className="tab-bar">{tabs.map(t=><button key={t.id} className={`tab${tab===t.id?' active':''}`} onClick={()=>setTab(t.id)}>{t.label}</button>)}</div>
-      <div className="card" style={{maxWidth:540}}>
-        <div style={{marginBottom:16}}>
-          <div style={{fontWeight:600,marginBottom:6}}>{tabs.find(t=>t.id===tab)?.label}</div>
-          <p style={{fontSize:12,color:'var(--text3)'}}>
-            {tab==='uye'&&'Tüm kat maliklerini veya kiracıları tek seferde ekleyin.'}
-            {tab==='tahsilat'&&'Banka ekstresini şablona yapıştırıp toplu tahsilat kaydı oluşturun.'}
-            {tab==='borc'&&'Aylık aidat veya yakıt gibi kalemleri tüm üyelere toplu borçlandırın.'}
-            {tab==='gider'&&'Fatura listesini veya gider kayıtlarını toplu aktarın.'}
-          </p>
-        </div>
-        <button className="btn-ghost" onClick={()=>dlTemplate(tab)} style={{display:'flex',alignItems:'center',gap:6,marginBottom:16}}><Ico n="dl" size={13}/>Şablon İndir (.xlsx)</button>
-        <div style={{marginBottom:12}}>
-          <label>Excel Dosyası Seçin (.xlsx / .xls)</label>
-          <input type="file" accept=".xlsx,.xls" ref={fileRef} style={{padding:'6px',cursor:'pointer'}}/>
-        </div>
-        <button className="btn-success" onClick={doImport} disabled={busy} style={{display:'flex',alignItems:'center',gap:6}}>
-          {busy?<><div style={{width:14,height:14,border:'2px solid rgba(255,255,255,0.3)',borderTop:'2px solid #fff',borderRadius:'50%',animation:'spin 0.7s linear infinite'}}/>Aktarılıyor...</>:<><Ico n="ul" size={14}/>İçe Aktar</>}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────── SETTINGS ─────────────── */
-function Settings({data,update,showToast}){
-  const {fbStatus,connectFB,disconnectFB,fbCfg}=useContext(FBCtx);
-  const [bForm,setBForm]=useState({...data.settings});
-  const [fbForm,setFbForm]=useState({apiKey:'',authDomain:'',projectId:'',storageBucket:'',messagingSenderId:'',appId:'',...(fbCfg||{})});
-  const [paste,setPaste]=useState('');
-  const [showPaste,setShowPaste]=useState(false);
-
-  const saveBina=()=>{update('settings',bForm);showToast('Bina bilgileri kaydedildi ✓');};
-
-  const applyPaste=()=>{
-    try{
-      const c=paste.replace(/const\s+\w+\s*=\s*/,'').replace(/;?\s*$/,'').trim();
-      const o=eval('('+c+')');
-      setFbForm({apiKey:o.apiKey||'',authDomain:o.authDomain||'',projectId:o.projectId||'',storageBucket:o.storageBucket||'',messagingSenderId:o.messagingSenderId||'',appId:o.appId||''});
-      setShowPaste(false);showToast('Config yapıştırıldı. Bağlan butonuna basın.');
-    }catch{showToast('Config parse hatası. Firebase Console\'dan kopyalayın.','error');}
-  };
-
-  const doBaglan=async()=>{
-    if(!fbForm.apiKey||!fbForm.projectId){showToast('API Key ve Project ID zorunludur!','error');return;}
-    await connectFB({...fbForm,authDomain:fbForm.authDomain||fbForm.projectId+'.firebaseapp.com',storageBucket:fbForm.storageBucket||fbForm.projectId+'.appspot.com'});
-  };
-
-  const clearAll=()=>{
-    if(prompt('Tüm verileri silmek için "SİL" yazın:')!=='SİL')return;
-    ['uyeler','tahsilatlar','borclar','giderler'].forEach(k=>update(k,[]));
-    showToast('Tüm veriler silindi!','error');
-  };
-
-  const statusInfo={
-    off:{color:'var(--text3)',label:'Bağlı değil — veriler tarayıcı belleğinde (localStorage)'},
-    connecting:{color:'var(--amber)',label:'Firebase\'e bağlanılıyor...'},
-    connected:{color:'var(--green)',label:'Bağlantı aktif — gerçek zamanlı bulut senkronizasyonu çalışıyor ✓'},
-    error:{color:'var(--red)',label:'Bağlantı hatası — Ayarları kontrol edin'},
-  };
-  const si=statusInfo[fbStatus]||statusInfo.off;
-
-  return(
-    <div>
-      <h1 style={{fontSize:20,fontWeight:600,marginBottom:20}}>Ayarlar</h1>
-      <div style={{display:'grid',gap:20,maxWidth:600}}>
-
-        {/* Bina bilgileri */}
-        <div className="card">
-          <div className="section-title" style={{marginTop:0}}>Bina / Site Bilgileri</div>
-          <div className="form-grid">
-            <div><label>Bina / Site Adı</label><input value={bForm.binaAdi||''} onChange={e=>setBForm(p=>({...p,binaAdi:e.target.value}))}/></div>
-            <div><label>Adres</label><input value={bForm.adres||''} onChange={e=>setBForm(p=>({...p,adres:e.target.value}))}/></div>
-            <div className="form-row">
-              <div><label>Yönetici</label><input value={bForm.yonetici||''} onChange={e=>setBForm(p=>({...p,yonetici:e.target.value}))}/></div>
-              <div><label>Yönetici Telefon</label><input value={bForm.tel||''} onChange={e=>setBForm(p=>({...p,tel:e.target.value}))}/></div>
-            </div>
-            <div className="form-row">
-              <div><label>Standart Aidat (₺)</label><input type="number" value={bForm.standartAidat||''} onChange={e=>setBForm(p=>({...p,standartAidat:e.target.value}))}/></div>
-              <div><label>Aktif Yıl</label><input type="number" value={bForm.yil||2025} onChange={e=>setBForm(p=>({...p,yil:e.target.value}))}/></div>
-            </div>
-            <div style={{justifySelf:'start'}}><button className="btn-primary" onClick={saveBina}>Kaydet</button></div>
-          </div>
-        </div>
-
-        {/* Firebase */}
-        <div className="card">
-          <div className="section-title" style={{marginTop:0}}>Firebase Firestore Bağlantısı</div>
-
-          {/* Status bar */}
-          <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'var(--bg3)',borderRadius:'var(--radius)',marginBottom:16,border:'1px solid var(--border)'}}>
-            <span className={`fb-dot ${fbStatus}`}/>
-            <span style={{fontSize:12,color:si.color}}>{si.label}</span>
-          </div>
-
-          {fbStatus==='connected'?(
-            <div>
-              <div style={{padding:'10px 14px',background:'rgba(34,197,94,0.08)',borderRadius:'var(--radius)',border:'1px solid rgba(34,197,94,0.2)',marginBottom:16,fontSize:12,color:'var(--green)'}}>
-                <Ico n="cloud" size={13} color="var(--green)"/> Bağlı proje: <span style={{fontFamily:'IBM Plex Mono',fontWeight:500}}>{fbCfg?.projectId}</span>
-              </div>
-              <button className="btn-danger" onClick={disconnectFB} style={{display:'flex',alignItems:'center',gap:6}}><Ico n="cloudOff" size={14}/>Firebase Bağlantısını Kes</button>
-            </div>
-          ):(
-            <>
-              <p style={{fontSize:12,color:'var(--text3)',marginBottom:14,lineHeight:1.7}}>
-                Firebase Firestore ile verileriniz güvenle bulutta saklanır. Birden fazla cihazdan erişim ve gerçek zamanlı senkronizasyon sağlar. Ücretsiz plan: 1 GB depolama, 50.000 okuma/gün.<br/>
-                <a href="https://console.firebase.google.com" target="_blank" rel="noopener" style={{color:'var(--accent)'}}>console.firebase.google.com</a> → Yeni Proje → Firestore Database → Web App ekle → Config kopyala
-              </p>
-
-              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
-                <button className="btn-ghost btn-sm" onClick={()=>setShowPaste(!showPaste)} style={{display:'flex',alignItems:'center',gap:5}}><Ico n="cloud" size={12}/>Firebase Config Yapıştır</button>
-                <span style={{fontSize:11,color:'var(--text3)'}}>veya aşağıdaki alanlara elle girin</span>
-              </div>
-
-              {showPaste&&(
-                <div style={{marginBottom:14,padding:14,background:'var(--bg3)',borderRadius:'var(--radius)',border:'1px solid var(--border)'}}>
-                  <label style={{marginBottom:6,display:'block',color:'var(--text2)'}}>Firebase Console → Proje Ayarları → "firebaseConfig" objesini yapıştırın</label>
-                  <textarea rows={7} value={paste} onChange={e=>setPaste(e.target.value)} placeholder={`const firebaseConfig = {\n  apiKey: "AIzaSy...",\n  authDomain: "proje.firebaseapp.com",\n  projectId: "proje-id",\n  storageBucket: "proje.appspot.com",\n  messagingSenderId: "123456789",\n  appId: "1:123:web:abc"\n};`} style={{fontFamily:'IBM Plex Mono',fontSize:11}}/>
-                  <div style={{display:'flex',gap:8,marginTop:8}}>
-                    <button className="btn-primary btn-sm" onClick={applyPaste}>Uygula</button>
-                    <button className="btn-ghost btn-sm" onClick={()=>setShowPaste(false)}>İptal</button>
-                  </div>
-                </div>
-              )}
-
-              <div className="form-grid" style={{marginBottom:14}}>
-                <div><label>API Key *</label><input value={fbForm.apiKey} onChange={e=>setFbForm(p=>({...p,apiKey:e.target.value}))} placeholder="AIzaSy..."/></div>
-                <div><label>Project ID *</label><input value={fbForm.projectId} onChange={e=>setFbForm(p=>({...p,projectId:e.target.value}))} placeholder="my-aidatpro"/></div>
-                <div className="form-row">
-                  <div><label>Auth Domain</label><input value={fbForm.authDomain} onChange={e=>setFbForm(p=>({...p,authDomain:e.target.value}))} placeholder="proje.firebaseapp.com"/></div>
-                  <div><label>App ID</label><input value={fbForm.appId} onChange={e=>setFbForm(p=>({...p,appId:e.target.value}))} placeholder="1:xxx:web:yyy"/></div>
-                </div>
-              </div>
-
-              <button className="btn-primary" onClick={doBaglan} style={{display:'flex',alignItems:'center',gap:6,marginBottom:16}}><Ico n="cloud" size={14}/>Firebase'e Bağlan</button>
-
-              {/* Firestore rules */}
-              <div style={{padding:'12px 14px',background:'var(--bg3)',borderRadius:'var(--radius)',border:'1px solid var(--border)'}}>
-                <div style={{fontSize:11,fontWeight:600,color:'var(--text2)',marginBottom:8}}>Firebase Console → Firestore → Rules — Bu kuralı yapıştırın:</div>
-                <code style={{display:'block',whiteSpace:'pre'}}{`rules_version = '2';
+        <button class="bp" onclick="connectFB()">Firebase'e Bağlan</button>
+        <div style="margin-top:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">Firestore Rules (Console → Firestore → Rules):</div>
+          <div class="code-box">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
       allow read, write: if true;
     }
   }
-}`}</code>
-                <div style={{fontSize:11,color:'var(--text3)',marginTop:8}}>⚠️ Bu kural herkese erişim açar. Sadece sizin kullandığınız özel projelerde kullanın.</div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Tehlikeli bölge */}
-        <div className="card" style={{borderColor:'rgba(239,68,68,0.2)'}}>
-          <div className="section-title" style={{marginTop:0,color:'var(--red)'}}>Tehlikeli Bölge</div>
-          <p style={{fontSize:12,color:'var(--text3)',marginBottom:12}}>Bu işlem geri alınamaz. Tüm kayıtlar kalıcı olarak silinir (Firebase'den de).</p>
-          <button className="btn-danger" onClick={clearAll}>Tüm Verileri Sil</button>
+}</div>
         </div>
       </div>
     </div>
-  );
+    <div class="card" style="border-color:#ef444433">
+      <div class="st" style="margin-top:0;color:var(--red)">Tehlikeli Bölge</div>
+      <p style="font-size:12px;color:var(--text3);margin:10px 0">Bu işlem geri alınamaz.</p>
+      <button class="bd" onclick="clearAll()">Tüm Verileri Sil</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- MODALS -->
+<div id="mo-uye" class="mo">
+  <div class="mo-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 id="uye-mo-title">Üye Ekle</h2>
+      <button class="bg bsm" onclick="closeModal('mo-uye')">✕</button>
+    </div>
+    <div class="fg">
+      <div class="st" style="margin-top:0">Daire / Üye Bilgileri</div>
+      <div class="fr"><div><label>Daire / Üye No *</label><input id="u-daire" placeholder="101"></div><div><label>Ad Soyad *</label><input id="u-ad" placeholder="Ahmet Yılmaz"></div></div>
+      <div class="fr"><div><label>Telefon</label><input id="u-tel" placeholder="0532 xxx xx xx"></div><div><label>E-posta</label><input id="u-mail" placeholder="ornek@mail.com"></div></div>
+      <div><label>Adres</label><input id="u-adres" placeholder="Daire adresi"></div>
+      <div class="fr"><div><label>Giriş Tarihi</label><input type="date" id="u-giris"></div><div><label>Çıkış Tarihi</label><input type="date" id="u-cikis"></div></div>
+      <div class="fr">
+        <div><label>Kullanım Tipi</label><select id="u-tip"><option value="">Seçin</option><option>Malik (Oturuyor)</option><option>Kiracı</option><option>Boş</option><option>İşyeri</option></select></div>
+        <div><label>Aidat (₺)</label><input type="number" id="u-aidat" placeholder="500"></div>
+      </div>
+      <div class="st">Kat Maliki Bilgileri</div>
+      <div class="fr"><div><label>Kat Maliki Adı</label><input id="u-km-ad" placeholder="Mehmet Kaya"></div><div><label>Kat Maliki Tel</label><input id="u-km-tel" placeholder="0533 xxx xx xx"></div></div>
+      <div><label>Kat Maliki Adres</label><input id="u-km-adres" placeholder="Farklı adres varsa"></div>
+      <div class="st">Ek Bilgiler</div>
+      <div class="fr"><div><label>IBAN</label><input id="u-iban" placeholder="TR00 0000..."></div><div><label>Araç Plakası</label><input id="u-plaka" placeholder="06 ABC 123"></div></div>
+      <div><label>Açıklama</label><textarea id="u-acik" rows="2" placeholder="Notlar..."></textarea></div>
+      <div style="display:flex;gap:9px;justify-content:flex-end">
+        <button class="bg" onclick="closeModal('mo-uye')">İptal</button>
+        <button class="bp" onclick="saveUye()">Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="mo-tah" class="mo">
+  <div class="mo-box" style="max-width:460px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 id="tah-mo-title">Tahsilat Ekle</h2>
+      <button class="bg bsm" onclick="closeModal('mo-tah')">✕</button>
+    </div>
+    <div class="fg">
+      <div><label>Daire / Üye *</label><select id="t-uye"><option value="">— Seçin —</option></select></div>
+      <div class="fr"><div><label>Tarih</label><input type="date" id="t-tarih"></div><div><label>Tutar (₺) *</label><input type="number" id="t-tutar" placeholder="0.00" step="0.01"></div></div>
+      <div id="t-tahsilat-fields">
+        <div class="fg">
+          <div><label>Tahsilat Çeşidi</label><select id="t-cesit"><option>Nakit</option><option>Banka</option><option>Havale/EFT</option><option>Mahsup</option><option>Kredi Kartı</option></select></div>
+          <div><label>Banka / Hesap</label><input id="t-banka" placeholder="Ziraat, İş Bankası..."></div>
+        </div>
+      </div>
+      <div id="t-borc-fields" style="display:none">
+        <div class="fg">
+          <div><label>Borç Kalemi</label><select id="t-kalem"><option>Üye Aidat</option><option>Yakıt</option><option>Demirbaş</option><option>Kapıcı Ücreti</option><option>Temizlik</option><option>Diğer</option></select></div>
+          <div><label>Dönem</label><input id="t-donem" placeholder="Ocak 2025"></div>
+        </div>
+      </div>
+      <div><label>Açıklama</label><input id="t-acik" placeholder="Notlar..."></div>
+      <div style="display:flex;gap:9px;justify-content:flex-end">
+        <button class="bg" onclick="closeModal('mo-tah')">İptal</button>
+        <button id="tah-save-btn" class="bs" onclick="saveTah()">Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="mo-gider" class="mo">
+  <div class="mo-box" style="max-width:460px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2>Gider Ekle</h2>
+      <button class="bg bsm" onclick="closeModal('mo-gider')">✕</button>
+    </div>
+    <div class="fg">
+      <div class="fr"><div><label>Tarih</label><input type="date" id="g-tarih"></div><div><label>Tutar (₺) *</label><input type="number" id="g-tutar" step="0.01"></div></div>
+      <div><label>Gider Kalemi *</label><select id="g-kalem"></select></div>
+      <div class="fr">
+        <div><label>Ödeme Yöntemi</label><select id="g-odeme"><option value="">Seçin</option><option>Nakit</option><option>Banka</option><option>Havale/EFT</option><option>Kredi Kartı</option></select></div>
+        <div><label>Belge / Fatura No</label><input id="g-belge" placeholder="F-2025-001"></div>
+      </div>
+      <div><label>Tedarikçi / Firma</label><input id="g-ted" placeholder="Firma adı"></div>
+      <div><label>Açıklama</label><textarea id="g-acik" rows="2" placeholder="Notlar..."></textarea></div>
+      <div style="display:flex;gap:9px;justify-content:flex-end">
+        <button class="bg" onclick="closeModal('mo-gider')">İptal</button>
+        <button class="bp" onclick="saveGider()">Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="mo-kalem" class="mo">
+  <div class="mo-box" style="max-width:340px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2>Gider Kalemleri</h2>
+      <button class="bg bsm" onclick="closeModal('mo-kalem')">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input id="new-kalem" placeholder="Yeni kalem..." onkeydown="if(event.key==='Enter')addKalem()">
+      <button class="bp bsm" onclick="addKalem()">Ekle</button>
+    </div>
+    <div id="kalem-list"></div>
+    <div style="text-align:right;margin-top:12px"><button class="bg" onclick="closeModal('mo-kalem')">Kapat</button></div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const LS={
+  g:k=>{try{return JSON.parse(localStorage.getItem('ap_'+k)||'null')}catch{return null}},
+  s:(k,v)=>{try{localStorage.setItem('ap_'+k,JSON.stringify(v))}catch{}}
+};
+const DEF_KALEM=['Elektrik','Su','Doğalgaz','Asansör Bakım','Temizlik','Güvenlik','Bahçe Bakım','Hasar Onarım','Diğer'];
+let D={
+  uyeler: LS.g('uyeler')||[],
+  tahsilatlar: LS.g('tahsilatlar')||[],
+  borclar: LS.g('borclar')||[],
+  giderler: LS.g('giderler')||[],
+  giderKalemleri: LS.g('giderKalemleri')||DEF_KALEM,
+  settings: LS.g('settings')||{binaAdi:'Bina / Site Adı',yil:2025}
+};
+
+// ===== FIREBASE =====
+let fbApp=null,fbDB=null,fbStatus='off';
+const unsubs=[];
+
+function setFBStatus(s){
+  fbStatus=s;
+  const dot=document.getElementById('fb-dot');
+  const dot2=document.getElementById('fb-dot2');
+  const lbl=document.getElementById('fb-lbl');
+  const txt=document.getElementById('fb-status-txt');
+  const cls={off:'off',connecting:'spin',connected:'on',error:'err'};
+  const label={off:'Yerel Depolama',connecting:'Bağlanıyor...',connected:'Firebase Aktif',error:'Bağlantı Hatası'};
+  const color={off:'var(--text3)',connecting:'var(--amber)',connected:'var(--green)',error:'var(--red)'};
+  [dot,dot2].forEach(d=>{if(d){d.className='fb-dot '+(cls[s]||'off')}});
+  if(lbl){lbl.textContent=label[s]||'';lbl.style.color=color[s]||'var(--text3)';}
+  if(txt){
+    const msgs={off:'Bağlı değil — veriler tarayıcı belleğinde',connecting:'Firebase\'e bağlanılıyor...',connected:'Gerçek zamanlı senkronizasyon aktif ✓',error:'Bağlantı hatası — ayarları kontrol edin'};
+    txt.textContent=msgs[s]||'';txt.style.color=color[s]||'var(--text3)';
+  }
+  document.getElementById('fb-connected-box').style.display=s==='connected'?'block':'none';
+  document.getElementById('fb-form-box').style.display=s==='connected'?'none':'block';
 }
 
-ReactDOM.render(<App/>,document.getElementById('root'));
+async function connectFB(){
+  const raw=document.getElementById('fb-paste').value.trim();
+  if(!raw){toast('Firebase config yapıştırın!','err');return;}
+  let cfg;
+  try{
+    const c=raw.replace(/const\s+\w+\s*=\s*/,'').replace(/;?\s*$/,'').trim();
+    cfg=eval('('+c+')');
+  }catch(e){toast('Config parse hatası: '+e.message,'err');return;}
+  if(!cfg.apiKey||!cfg.projectId){toast('apiKey ve projectId zorunlu!','err');return;}
+  loader(true);
+  setFBStatus('connecting');
+  try{
+    if(fbApp){try{fbApp.delete()}catch{}}
+    fbApp=firebase.initializeApp(cfg,'ap_'+Date.now());
+    fbDB=firebase.firestore(fbApp);
+    await fbDB.collection('_meta').doc('test').set({t:Date.now()});
+    LS.s('fbCfg',cfg);
+    document.getElementById('fb-project-lbl').textContent=cfg.projectId;
+    setFBStatus('connected');
+    setupListeners();
+    toast('Firebase bağlandı ✓','ok');
+  }catch(e){
+    setFBStatus('error');
+    toast('Bağlantı hatası: '+e.message,'err');
+    console.error(e);
+  }finally{loader(false);}
+}
+
+function disconnectFB(){
+  unsubs.forEach(u=>u&&u());unsubs.length=0;
+  if(fbApp){try{fbApp.delete()}catch{}}
+  fbApp=null;fbDB=null;
+  LS.s('fbCfg',null);
+  setFBStatus('off');
+  toast('Firebase bağlantısı kesildi.');
+}
+
+function setupListeners(){
+  unsubs.forEach(u=>u&&u());unsubs.length=0;
+  ['uyeler','tahsilatlar','borclar','giderler'].forEach(col=>{
+    const u=fbDB.collection(col).onSnapshot(snap=>{
+      D[col]=snap.docs.map(d=>({id:d.id,...d.data()}));
+      LS.s(col,D[col]);
+      refreshCurrent();
+    });
+    unsubs.push(u);
+  });
+  const u1=fbDB.collection('_meta').doc('settings').onSnapshot(d=>{
+    if(d.exists){D.settings={...D.settings,...d.data()};LS.s('settings',D.settings);refreshSettings();}
+  });
+  const u2=fbDB.collection('_meta').doc('giderKalemleri').onSnapshot(d=>{
+    if(d.exists&&d.data().list){D.giderKalemleri=d.data().list;LS.s('giderKalemleri',D.giderKalemleri);}
+  });
+  unsubs.push(u1,u2);
+}
+
+async function fbSet(col,id,data){
+  if(fbDB){const {id:_,...r}=data;await fbDB.collection(col).doc(id).set(r,{merge:true});}
+}
+async function fbDel(col,id){if(fbDB){await fbDB.collection(col).doc(id).delete();}}
+async function fbSetMeta(docId,data){if(fbDB){await fbDB.collection('_meta').doc(docId).set(data);}}
+
+// auto connect on load
+(async()=>{
+  const saved=LS.g('fbCfg');
+  if(saved&&saved.apiKey){
+    loader(true);
+    setFBStatus('connecting');
+    try{
+      if(fbApp){try{fbApp.delete()}catch{}}
+      fbApp=firebase.initializeApp(saved,'ap_'+Date.now());
+      fbDB=firebase.firestore(fbApp);
+      await fbDB.collection('_meta').doc('test').get();
+      document.getElementById('fb-project-lbl').textContent=saved.projectId;
+      setFBStatus('connected');
+      setupListeners();
+    }catch(e){setFBStatus('error');console.error(e);}
+    finally{loader(false);}
+  }
+  refreshAll();
+})();
+
+// ===== HELPERS =====
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today=()=>new Date().toISOString().split('T')[0];
+const fmt=n=>Number(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show t-'+(type==='err'?'err':type==='info'?'info':'ok');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.className='toast',3500);
+}
+function loader(show){document.getElementById('loader').className='ldr'+(show?' show':'');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function go(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));
+  document.getElementById('p-'+page).classList.add('active');
+  document.querySelector(`[onclick="go('${page}')"]`).classList.add('active');
+  refreshPage(page);
+}
+
+let currentPage='dashboard';
+function refreshCurrent(){refreshPage(currentPage);}
+function refreshPage(p){
+  currentPage=p;
+  if(p==='dashboard')renderDash();
+  else if(p==='uyeler')renderUyeler();
+  else if(p==='tahsilat')renderTahsilat();
+  else if(p==='giderler')renderGiderler();
+  else if(p==='raporlar')renderRapor();
+  document.getElementById('bina-label').textContent=D.settings.binaAdi||'Bina / Site Adı';
+}
+function refreshAll(){refreshPage(currentPage);refreshSettings();}
+
+// ===== DASHBOARD =====
+function renderDash(){
+  const totT=D.tahsilatlar.reduce((s,t)=>s+Number(t.tutar||0),0);
+  const totB=D.borclar.reduce((s,b)=>s+Number(b.tutar||0),0);
+  const totG=D.giderler.reduce((s,g)=>s+Number(g.tutar||0),0);
+  const aktif=D.uyeler.filter(u=>!u.cikisTarihi).length;
+  const bakiye=totT-totG;
+  document.getElementById('dash-stats').innerHTML=[
+    {l:'Aktif Üye/Daire',v:aktif,c:'var(--accent)',u:''},
+    {l:'Toplam Tahsilat',v:fmt(totT),c:'var(--green)',u:'₺'},
+    {l:'Toplam Borç',v:fmt(totB),c:'var(--amber)',u:'₺'},
+    {l:'Tahsil Edilmemiş',v:fmt(Math.max(0,totB-totT)),c:'var(--red)',u:'₺'},
+    {l:'Toplam Gider',v:fmt(totG),c:'var(--purple)',u:'₺'},
+    {l:'Kasa Bakiyesi',v:fmt(bakiye),c:bakiye>=0?'var(--green)':'var(--red)',u:'₺'},
+  ].map(s=>`<div class="stat"><div class="stat-v" style="color:${s.c}">${s.u}${s.v}</div><div class="stat-l">${s.l}</div></div>`).join('');
+
+  const sonT=[...D.tahsilatlar].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||'')).slice(0,5);
+  const sonB=[...D.borclar].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||'')).slice(0,5);
+
+  const mkRow=(items,col)=>items.length?items.map(t=>{
+    const u=D.uyeler.find(x=>x.id===t.uyeId)||{};
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #2a355033">
+      <div><div style="font-size:12px;font-weight:500">${esc(u.ad||'?')} · D:${esc(u.daireNo||'?')}</div><div style="font-size:11px;color:var(--text3)">${t.tarih||''} · ${t.cesit||''}</div></div>
+      <div style="font-family:monospace;font-size:13px;color:${col}">${col==='var(--green)'?'+':'-'}${fmt(t.tutar)}₺</div>
+    </div>`;}).join(''):'<p style="color:var(--text3);font-size:12px">Henüz kayıt yok</p>';
+
+  document.getElementById('son-tahsilat').innerHTML=mkRow(sonT,'var(--green)');
+  document.getElementById('son-borc').innerHTML=mkRow(sonB,'var(--amber)');
+}
+
+// ===== UYELER =====
+let uyeTab='aktif';
+function switchUyeTab(t){
+  uyeTab=t;
+  document.getElementById('tab-aktif').className='tab'+(t==='aktif'?' active':'');
+  document.getElementById('tab-arsiv').className='tab'+(t==='arsiv'?' active':'');
+  renderUyeler();
+}
+function renderUyeler(){
+  const q=(document.getElementById('uye-search')||{}).value||'';
+  const list=D.uyeler
+    .filter(u=>uyeTab==='aktif'?!u.cikisTarihi:!!u.cikisTarihi)
+    .filter(u=>esc(u.ad||'').toLowerCase().includes(q.toLowerCase())||String(u.daireNo||'').includes(q))
+    .sort((a,b)=>String(a.daireNo||'').localeCompare(String(b.daireNo||'')));
+  const tb=document.getElementById('uye-tbody');
+  if(!tb)return;
+  tb.innerHTML=list.length?list.map(u=>`
+    <tr>
+      <td><span style="font-family:monospace;font-weight:700;color:var(--accent)">${esc(u.daireNo)}</span></td>
+      <td style="font-weight:500">${esc(u.ad)}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--text2)">${esc(u.telefon||'—')}</td>
+      <td style="font-size:12px">${esc(u.kullanımTipi||'—')}</td>
+      <td style="font-size:12px;color:var(--text2)">${u.girisTarihi||'—'}</td>
+      <td style="font-size:12px">${esc(u.katMalikiAd||'—')}</td>
+      <td>${u.cikisTarihi?'<span class="badge bg-r">Arşiv</span>':'<span class="badge bg-g">Aktif</span>'}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="bg bsm" onclick="editUye('${u.id}')">✎</button>
+          ${!u.cikisTarihi?`<button class="bg bsm" onclick="cikisYap('${u.id}')" title="Çıkış">⊠</button>`:''}
+          <button class="bd bsm" onclick="delUye('${u.id}')">✕</button>
+        </div>
+      </td>
+    </tr>`).join(''):'<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Kayıt bulunamadı</td></tr>';
+}
+
+let editingUyeId=null;
+function openUyeModal(id){
+  editingUyeId=id||null;
+  const u=id?D.uyeler.find(x=>x.id===id):{};
+  document.getElementById('uye-mo-title').textContent=id?'Üye Düzenle':'Yeni Üye Ekle';
+  ['daire','ad','tel','mail','adres','giris','cikis','tip','aidat','km-ad','km-tel','km-adres','iban','plaka','acik'].forEach(k=>{
+    const map={daire:'daireNo',ad:'ad',tel:'telefon',mail:'eposta',adres:'adres',giris:'girisTarihi',cikis:'cikisTarihi',tip:'kullanımTipi',aidat:'aidatTutar','km-ad':'katMalikiAd','km-tel':'katMalikiTel','km-adres':'katMalikiAdres',iban:'iban',plaka:'plaka',acik:'aciklama'};
+    const el=document.getElementById('u-'+k);
+    if(el)el.value=u?.[map[k]]||'';
+  });
+  document.getElementById('mo-uye').classList.add('open');
+}
+function editUye(id){openUyeModal(id);}
+async function saveUye(){
+  const daire=document.getElementById('u-daire').value.trim();
+  const ad=document.getElementById('u-ad').value.trim();
+  if(!daire||!ad){toast('Daire No ve Ad zorunludur!','err');return;}
+  const item={
+    id:editingUyeId||uid(),
+    daireNo:daire,ad,
+    telefon:document.getElementById('u-tel').value,
+    eposta:document.getElementById('u-mail').value,
+    adres:document.getElementById('u-adres').value,
+    girisTarihi:document.getElementById('u-giris').value,
+    cikisTarihi:document.getElementById('u-cikis').value,
+    kullanımTipi:document.getElementById('u-tip').value,
+    aidatTutar:document.getElementById('u-aidat').value,
+    katMalikiAd:document.getElementById('u-km-ad').value,
+    katMalikiTel:document.getElementById('u-km-tel').value,
+    katMalikiAdres:document.getElementById('u-km-adres').value,
+    iban:document.getElementById('u-iban').value,
+    plaka:document.getElementById('u-plaka').value,
+    aciklama:document.getElementById('u-acik').value,
+    kayitTarihi:today()
+  };
+  const idx=D.uyeler.findIndex(x=>x.id===item.id);
+  if(idx>=0)D.uyeler[idx]=item;else D.uyeler.push(item);
+  LS.s('uyeler',D.uyeler);
+  try{await fbSet('uyeler',item.id,item);}catch(e){console.error(e);}
+  closeModal('mo-uye');
+  renderUyeler();
+  toast('Üye kaydedildi ✓');
+}
+async function delUye(id){
+  if(!confirm('Bu üyeyi silmek istediğinizden emin misiniz?'))return;
+  D.uyeler=D.uyeler.filter(x=>x.id!==id);
+  LS.s('uyeler',D.uyeler);
+  try{await fbDel('uyeler',id);}catch(e){}
+  renderUyeler();toast('Üye silindi');
+}
+async function cikisYap(id){
+  const d=prompt('Çıkış tarihi (YYYY-AA-GG):',today());
+  if(!d)return;
+  const u=D.uyeler.find(x=>x.id===id);
+  if(!u)return;
+  u.cikisTarihi=d;
+  LS.s('uyeler',D.uyeler);
+  try{await fbSet('uyeler',id,u);}catch(e){}
+  renderUyeler();toast('Üye arşive taşındı');
+}
+
+// ===== TAHSİLAT =====
+let tahTab='tahsilat';
+function switchTahTab(t){
+  tahTab=t;
+  ['tah','bor','car'].forEach(x=>document.getElementById('tab-'+x).className='tab'+(t==={tah:'tahsilat',bor:'borc',car:'cari'}[x]?' active':''));
+  renderTahsilat();
+}
+function renderTahsilat(){
+  const q=(document.getElementById('tah-search')||{}).value||'';
+  const filt=list=>list.filter(t=>{
+    const u=D.uyeler.find(x=>x.id===t.uyeId)||{};
+    return !q||String(u.daireNo||'')===q||esc(u.ad||'').toLowerCase().includes(q.toLowerCase());
+  }).sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
+  const box=document.getElementById('tah-content');
+  if(!box)return;
+  if(tahTab==='cari'){box.innerHTML=cariHTML();return;}
+  const list=filt(tahTab==='tahsilat'?D.tahsilatlar:D.borclar);
+  const cols=tahTab==='tahsilat'
+    ?['Tarih','Daire','Ad Soyad','Çeşit','Banka/Not','Tutar','']
+    :['Tarih','Daire','Ad Soyad','Kalem','Dönem','Açıklama','Tutar',''];
+  box.innerHTML=`<div class="card" style="padding:0"><div class="tw"><table>
+    <thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${list.length?list.map(t=>{
+      const u=D.uyeler.find(x=>x.id===t.uyeId)||{};
+      const col=tahTab==='tahsilat'?'var(--green)':'var(--amber)';
+      const sign=tahTab==='tahsilat'?'+':'-';
+      const extra=tahTab==='tahsilat'
+        ?`<td style="font-size:12px;color:var(--text2)">${esc(t.banka||t.aciklama||'—')}</td>`
+        :`<td style="font-size:12px;color:var(--text2)">${esc(t.donem||'—')}</td><td style="font-size:12px;color:var(--text2)">${esc(t.aciklama||'—')}</td>`;
+      const cclass=tahTab==='tahsilat'?'bg-b':'bg-a';
+      return`<tr>
+        <td style="font-size:12px;color:var(--text2)">${t.tarih||''}</td>
+        <td><span style="font-family:monospace;font-weight:700;color:var(--accent)">${esc(u.daireNo||'?')}</span></td>
+        <td>${esc(u.ad||'?')}</td>
+        <td><span class="badge ${cclass}">${esc(t.cesit||'')}</span></td>
+        ${extra}
+        <td style="font-family:monospace;color:${col};font-weight:700">${sign}${fmt(t.tutar)}₺</td>
+        <td><button class="bd bsm" onclick="delTah('${t.id}','${tahTab==='tahsilat'?'tahsilatlar':'borclar'}')">✕</button></td>
+      </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Kayıt yok</td></tr>'}</tbody>
+  </table></div></div>`;
+}
+async function delTah(id,col){
+  if(!confirm('Silinsin mi?'))return;
+  D[col]=D[col].filter(x=>x.id!==id);
+  LS.s(col,D[col]);
+  try{await fbDel(col,id);}catch(e){}
+  renderTahsilat();toast('Silindi');
+}
+let tahTip='tahsilat';
+function openTahModal(tip){
+  tahTip=tip;
+  document.getElementById('tah-mo-title').textContent=tip==='tahsilat'?'Tahsilat Ekle':'Borçlandırma Ekle';
+  document.getElementById('tah-save-btn').className=tip==='tahsilat'?'bs':'bp';
+  document.getElementById('t-tahsilat-fields').style.display=tip==='tahsilat'?'block':'none';
+  document.getElementById('t-borc-fields').style.display=tip==='borc'?'block':'none';
+  document.getElementById('t-tarih').value=today();
+  document.getElementById('t-tutar').value='';
+  document.getElementById('t-banka').value='';
+  document.getElementById('t-acik').value='';
+  document.getElementById('t-donem').value='';
+  // fill uye select
+  const sel=document.getElementById('t-uye');
+  sel.innerHTML='<option value="">— Seçin —</option>'+
+    D.uyeler.filter(u=>!u.cikisTarihi).sort((a,b)=>String(a.daireNo||'').localeCompare(String(b.daireNo||'')))
+    .map(u=>`<option value="${u.id}">${esc(u.daireNo)} — ${esc(u.ad)}</option>`).join('');
+  document.getElementById('mo-tah').classList.add('open');
+}
+async function saveTah(){
+  const uyeId=document.getElementById('t-uye').value;
+  const tutar=document.getElementById('t-tutar').value;
+  if(!uyeId||!tutar){toast('Üye ve tutar zorunludur!','err');return;}
+  const col=tahTip==='tahsilat'?'tahsilatlar':'borclar';
+  const item={
+    id:uid(),
+    uyeId,
+    tarih:document.getElementById('t-tarih').value,
+    tutar:Number(tutar),
+    cesit:tahTip==='tahsilat'?document.getElementById('t-cesit').value:document.getElementById('t-kalem').value,
+    banka:document.getElementById('t-banka').value,
+    donem:document.getElementById('t-donem').value,
+    aciklama:document.getElementById('t-acik').value
+  };
+  D[col].push(item);
+  LS.s(col,D[col]);
+  try{await fbSet(col,item.id,item);}catch(e){console.error(e);}
+  closeModal('mo-tah');
+  renderTahsilat();
+  toast(tahTip==='tahsilat'?'Tahsilat kaydedildi ✓':'Borçlandırma kaydedildi ✓');
+}
+
+// ===== CARİ =====
+function cariHTML(){
+  const rows=D.uyeler.filter(u=>!u.cikisTarihi).map(u=>{
+    const borc=D.borclar.filter(b=>b.uyeId===u.id).reduce((s,b)=>s+Number(b.tutar||0),0);
+    const tah=D.tahsilatlar.filter(t=>t.uyeId===u.id).reduce((s,t)=>s+Number(t.tutar||0),0);
+    return{...u,borc,tah,kalan:borc-tah};
+  }).sort((a,b)=>b.kalan-a.kalan);
+  return`<div style="text-align:right;margin-bottom:10px">
+    <button class="bg bsm" onclick="exportCari()">↓ Excel'e Aktar</button>
+  </div>
+  <div class="card" style="padding:0"><div class="tw"><table>
+    <thead><tr><th>Daire</th><th>Ad Soyad</th><th>Toplam Borç</th><th>Tahsilat</th><th>Kalan</th><th>Durum</th></tr></thead>
+    <tbody>${rows.length?rows.map(u=>`<tr>
+      <td><span style="font-family:monospace;font-weight:700;color:var(--accent)">${esc(u.daireNo)}</span></td>
+      <td>${esc(u.ad)}</td>
+      <td style="font-family:monospace;color:var(--amber)">${fmt(u.borc)}₺</td>
+      <td style="font-family:monospace;color:var(--green)">${fmt(u.tah)}₺</td>
+      <td style="font-family:monospace;font-weight:700;color:${u.kalan>0?'var(--red)':u.kalan<0?'var(--green)':'var(--text2)'}">${fmt(Math.abs(u.kalan))}₺</td>
+      <td>${u.kalan>0?'<span class="badge bg-r">Borçlu</span>':u.kalan<0?'<span class="badge bg-g">Alacaklı</span>':'<span class="badge bg-b">Sıfır</span>'}</td>
+    </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">Aktif üye yok</td></tr>'}</tbody>
+  </table></div></div>`;
+}
+function exportCari(){
+  const rows=D.uyeler.filter(u=>!u.cikisTarihi).map(u=>{
+    const borc=D.borclar.filter(b=>b.uyeId===u.id).reduce((s,b)=>s+Number(b.tutar||0),0);
+    const tah=D.tahsilatlar.filter(t=>t.uyeId===u.id).reduce((s,t)=>s+Number(t.tutar||0),0);
+    return{'Daire No':u.daireNo,'Ad Soyad':u.ad,'Telefon':u.telefon||'','Kat Maliki':u.katMalikiAd||'','Borç':borc,'Tahsilat':tah,'Kalan Borç':borc-tah};
+  });
+  xlExport(rows,'cari-durum');
+}
+
+// ===== GİDERLER =====
+function renderGiderler(){
+  // kalem select
+  const sel=document.getElementById('g-kalem');
+  if(sel){sel.innerHTML='<option value="">— Seçin —</option>'+D.giderKalemleri.map(k=>`<option>${esc(k)}</option>`).join('');}
+  const total=D.giderler.reduce((s,g)=>s+Number(g.tutar||0),0);
+  const statsEl=document.getElementById('gider-stats');
+  if(statsEl){
+    const cards=[{l:'Toplam Gider',v:fmt(total),c:'var(--red)'}];
+    ['Elektrik','Su','Doğalgaz'].forEach(k=>{
+      const t=D.giderler.filter(g=>g.kalem===k).reduce((s,g)=>s+Number(g.tutar||0),0);
+      if(t>0)cards.push({l:k,v:fmt(t),c:'var(--text)'});
+    });
+    statsEl.innerHTML=cards.map(s=>`<div class="stat"><div class="stat-v" style="color:${s.c};font-size:16px">${s.v}₺</div><div class="stat-l">${s.l}</div></div>`).join('');
+  }
+  const tb=document.getElementById('gider-tbody');
+  if(!tb)return;
+  const sorted=[...D.giderler].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
+  tb.innerHTML=sorted.length?sorted.map(g=>`<tr>
+    <td style="font-size:12px;color:var(--text2)">${g.tarih||''}</td>
+    <td><span class="badge bg-p">${esc(g.kalem)}</span></td>
+    <td style="font-size:12px">${esc(g.aciklama||'—')}</td>
+    <td style="font-size:12px;color:var(--text2)">${esc(g.odemeYontemi||'—')}</td>
+    <td style="font-family:monospace;font-size:11px;color:var(--text3)">${esc(g.belgeNo||'—')}</td>
+    <td style="font-size:12px">${esc(g.tedarikci||'—')}</td>
+    <td style="font-family:monospace;color:var(--red);font-weight:700">${fmt(g.tutar)}₺</td>
+    <td><button class="bd bsm" onclick="delGider('${g.id}')">✕</button></td>
+  </tr>`).join(''):'<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Gider kaydı yok</td></tr>';
+}
+function openGiderModal(){
+  document.getElementById('g-tarih').value=today();
+  document.getElementById('g-tutar').value='';
+  document.getElementById('g-kalem').value='';
+  document.getElementById('g-odeme').value='';
+  document.getElementById('g-belge').value='';
+  document.getElementById('g-ted').value='';
+  document.getElementById('g-acik').value='';
+  document.getElementById('mo-gider').classList.add('open');
+}
+async function saveGider(){
+  const kalem=document.getElementById('g-kalem').value;
+  const tutar=document.getElementById('g-tutar').value;
+  if(!kalem||!tutar){toast('Kalem ve tutar zorunludur!','err');return;}
+  const item={id:uid(),tarih:document.getElementById('g-tarih').value,kalem,tutar:Number(tutar),odemeYontemi:document.getElementById('g-odeme').value,belgeNo:document.getElementById('g-belge').value,tedarikci:document.getElementById('g-ted').value,aciklama:document.getElementById('g-acik').value};
+  D.giderler.push(item);
+  LS.s('giderler',D.giderler);
+  try{await fbSet('giderler',item.id,item);}catch(e){console.error(e);}
+  closeModal('mo-gider');
+  renderGiderler();
+  toast('Gider kaydedildi ✓');
+}
+async function delGider(id){
+  if(!confirm('Silinsin mi?'))return;
+  D.giderler=D.giderler.filter(x=>x.id!==id);
+  LS.s('giderler',D.giderler);
+  try{await fbDel('giderler',id);}catch(e){}
+  renderGiderler();toast('Silindi');
+}
+function openKalemModal(){
+  renderKalemList();
+  document.getElementById('mo-kalem').classList.add('open');
+}
+function renderKalemList(){
+  document.getElementById('kalem-list').innerHTML=D.giderKalemleri.map((k,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #2a355044">
+      <span style="font-size:13px">${esc(k)}</span>
+      <button class="bd bsm" onclick="delKalem(${i})">✕</button>
+    </div>`).join('');
+}
+async function addKalem(){
+  const v=document.getElementById('new-kalem').value.trim();
+  if(!v)return;
+  D.giderKalemleri.push(v);
+  LS.s('giderKalemleri',D.giderKalemleri);
+  try{await fbSetMeta('giderKalemleri',{list:D.giderKalemleri});}catch(e){}
+  document.getElementById('new-kalem').value='';
+  renderKalemList();toast('Kalem eklendi');
+}
+async function delKalem(i){
+  if(!confirm('Silinsin mi?'))return;
+  D.giderKalemleri.splice(i,1);
+  LS.s('giderKalemleri',D.giderKalemleri);
+  try{await fbSetMeta('giderKalemleri',{list:D.giderKalemleri});}catch(e){}
+  renderKalemList();
+}
+function exportGider(){
+  const rows=[...D.giderler].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||'')).map(g=>({'Tarih':g.tarih,'Kalem':g.kalem,'Açıklama':g.aciklama||'','Ödeme':g.odemeYontemi||'','Belge No':g.belgeNo||'','Tedarikçi':g.tedarikci||'','Tutar':g.tutar}));
+  xlExport(rows,'gider-raporu');
+}
+
+// ===== RAPORLAR =====
+let rapTab='cari';
+function switchRapTab(t){
+  rapTab=t;
+  ['rcari','rtah','rbor','rgid','rozet'].forEach(x=>document.getElementById('tab-'+x).className='tab'+(t==={rcari:'cari',rtah:'tahsilat',rbor:'borc',rgid:'gider',rozet:'ozet'}[x]?' active':''));
+  renderRapor();
+}
+function renderRapor(){
+  const box=document.getElementById('rap-content');
+  if(!box)return;
+  if(rapTab==='cari'){box.innerHTML=cariHTML();return;}
+  if(rapTab==='ozet'){
+    const gk=D.borclar.reduce((acc,b)=>{acc[b.cesit]=(acc[b.cesit]||0)+Number(b.tutar||0);return acc;},{});
+    const goz=D.giderKalemleri.map(k=>({k,t:D.giderler.filter(g=>g.kalem===k).reduce((s,g)=>s+Number(g.tutar||0),0)})).filter(x=>x.t>0);
+    const mkCard=(title,items,col)=>`<div class="card">
+      <div style="font-weight:600;margin-bottom:12px">${title}</div>
+      ${items.map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2a355033"><span style="font-size:13px">${esc(k)}</span><span style="font-family:monospace;font-size:13px;color:${col}">${fmt(v)}₺</span></div>`).join('')}
+      <div style="display:flex;justify-content:space-between;padding:7px 0;font-weight:600;border-top:1px solid var(--border);margin-top:4px"><span style="font-size:13px">Toplam</span><span style="font-family:monospace;font-size:13px;color:${col}">${fmt(items.reduce((s,[,v])=>s+v,0))}₺</span></div>
+    </div>`;
+    box.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      ${mkCard('Gelir Kalemleri (Borçlandırma)',Object.entries(gk),'var(--amber)')}
+      ${mkCard('Gider Kalemleri',goz.map(x=>[x.k,x.t]),'var(--red)')}
+    </div>`;
+    return;
+  }
+  const listMap={tahsilat:D.tahsilatlar,borc:D.borclar,gider:D.giderler};
+  const list=[...(listMap[rapTab]||[])].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
+  let rows='';
+  let thead='';
+  if(rapTab==='tahsilat'){
+    thead='<tr><th>Tarih</th><th>Daire</th><th>Ad Soyad</th><th>Çeşit</th><th>Tutar</th></tr>';
+    rows=list.map(t=>{const u=D.uyeler.find(x=>x.id===t.uyeId)||{};return`<tr><td style="font-size:12px">${t.tarih||''}</td><td style="font-family:monospace;color:var(--accent)">${esc(u.daireNo||'?')}</td><td>${esc(u.ad||'?')}</td><td><span class="badge bg-b">${esc(t.cesit||'')}</span></td><td style="font-family:monospace;color:var(--green);font-weight:700">+${fmt(t.tutar)}₺</td></tr>`;}).join('');
+  }else if(rapTab==='borc'){
+    thead='<tr><th>Tarih</th><th>Daire</th><th>Ad Soyad</th><th>Kalem</th><th>Dönem</th><th>Tutar</th></tr>';
+    rows=list.map(b=>{const u=D.uyeler.find(x=>x.id===b.uyeId)||{};return`<tr><td style="font-size:12px">${b.tarih||''}</td><td style="font-family:monospace;color:var(--accent)">${esc(u.daireNo||'?')}</td><td>${esc(u.ad||'?')}</td><td><span class="badge bg-a">${esc(b.cesit||'')}</span></td><td style="font-size:12px;color:var(--text2)">${esc(b.donem||'—')}</td><td style="font-family:monospace;color:var(--amber);font-weight:700">-${fmt(b.tutar)}₺</td></tr>`;}).join('');
+  }else{
+    thead='<tr><th>Tarih</th><th>Kalem</th><th>Açıklama</th><th>Tedarikçi</th><th>Tutar</th></tr>';
+    rows=list.map(g=>`<tr><td style="font-size:12px">${g.tarih||''}</td><td><span class="badge bg-p">${esc(g.kalem||'')}</span></td><td style="font-size:12px">${esc(g.aciklama||'—')}</td><td style="font-size:12px">${esc(g.tedarikci||'—')}</td><td style="font-family:monospace;color:var(--red);font-weight:700">${fmt(g.tutar)}₺</td></tr>`).join('');
+  }
+  box.innerHTML=`<div class="card" style="padding:0"><div class="tw"><table><thead>${thead}</thead><tbody>${rows||'<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">Kayıt yok</td></tr>'}</tbody></table></div></div>`;
+}
+function doExport(){
+  if(rapTab==='cari'){exportCari();return;}
+  if(rapTab==='tahsilat'){const r=D.tahsilatlar.map(t=>{const u=D.uyeler.find(x=>x.id===t.uyeId)||{};return{'Tarih':t.tarih,'Daire No':u.daireNo,'Ad Soyad':u.ad,'Çeşit':t.cesit,'Banka':t.banka||'','Açıklama':t.aciklama||'','Tutar':t.tutar};});xlExport(r,'tahsilat-raporu');return;}
+  if(rapTab==='borc'){const r=D.borclar.map(b=>{const u=D.uyeler.find(x=>x.id===b.uyeId)||{};return{'Tarih':b.tarih,'Daire No':u.daireNo,'Ad Soyad':u.ad,'Kalem':b.cesit,'Dönem':b.donem||'','Açıklama':b.aciklama||'','Tutar':b.tutar};});xlExport(r,'borc-raporu');return;}
+  if(rapTab==='gider'){exportGider();return;}
+  toast('Bu sekme için Excel aktarımı mevcut değil.');
+}
+
+// ===== IMPORT =====
+let importTab='uye';
+const importDesc={uye:'Tüm kat maliklerini veya kiracıları tek seferde ekleyin.',tahsilat:'Banka ekstresini şablona yapıştırıp toplu tahsilat kaydedin.',borc:'Aylık aidat gibi kalemleri tüm üyelere toplu borçlandırın.',gider:'Fatura listesini veya gider kayıtlarını toplu aktarın.'};
+function switchImportTab(t){
+  importTab=t;
+  ['iuye','itah','ibor','igid'].forEach(x=>document.getElementById('tab-'+x).className='tab'+(t==={iuye:'uye',itah:'tahsilat',ibor:'borc',igid:'gider'}[x]?' active':''));
+  document.getElementById('import-desc').textContent=importDesc[t]||'';
+}
+function dlTemplate(){
+  const T={
+    uye:{h:['DaireNo','AdSoyad','Telefon','Eposta','Adres','GirisTarihi','KullanımTipi','AidatTutar','KatMalikiAd','KatMalikiTel','Aciklama'],r:[['101','Ahmet Yılmaz','0532 111 22 33','ahmet@mail.com','Daire adresi','2024-01-01','Kiracı',500,'Mehmet Kaya','0533 444 55 66','Not']]},
+    tahsilat:{h:['DaireNo','Tarih','Tutar','TahsilatCesidi','Banka','Aciklama'],r:[['101','2025-01-15',500,'Banka','Ziraat','Ocak ödemesi']]},
+    borc:{h:['DaireNo','Tarih','Tutar','BorcKalemi','Donem','Aciklama'],r:[['101','2025-01-01',500,'Üye Aidat','Ocak 2025','']]},
+    gider:{h:['Tarih','GiderKalemi','Tutar','OdemeYontemi','BelgeNo','Tedarikci','Aciklama'],r:[['2025-01-10','Elektrik',1200,'Banka','F-001','TEDAŞ','Ocak faturası']]},
+  };
+  const t=T[importTab];
+  const ws=XLSX.utils.aoa_to_sheet([t.h,...t.r]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Şablon');
+  XLSX.writeFile(wb,'sablon-'+importTab+'.xlsx');
+}
+async function doImport(){
+  const file=document.getElementById('import-file').files[0];
+  if(!file){toast('Dosya seçin!','err');return;}
+  const btn=document.getElementById('import-btn');
+  btn.textContent='Aktarılıyor...';btn.disabled=true;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+      let count=0;
+      for(const r of rows){
+        let item,col;
+        if(importTab==='uye'){col='uyeler';item={id:uid(),daireNo:String(r.DaireNo||''),ad:r.AdSoyad||'',telefon:String(r.Telefon||''),eposta:r.Eposta||'',adres:r.Adres||'',girisTarihi:String(r.GirisTarihi||''),kullanımTipi:r.KullanımTipi||'',aidatTutar:Number(r.AidatTutar||0),katMalikiAd:r.KatMalikiAd||'',katMalikiTel:String(r.KatMalikiTel||''),aciklama:r.Aciklama||'',kayitTarihi:today()};}
+        else if(importTab==='tahsilat'){const u=D.uyeler.find(x=>x.daireNo===String(r.DaireNo));col='tahsilatlar';item={id:uid(),uyeId:u?.id||'',tarih:String(r.Tarih||today()),tutar:Number(r.Tutar||0),cesit:r.TahsilatCesidi||'Banka',banka:r.Banka||'',aciklama:r.Aciklama||''};}
+        else if(importTab==='borc'){const u=D.uyeler.find(x=>x.daireNo===String(r.DaireNo));col='borclar';item={id:uid(),uyeId:u?.id||'',tarih:String(r.Tarih||today()),tutar:Number(r.Tutar||0),cesit:r.BorcKalemi||'Üye Aidat',donem:r.Donem||'',aciklama:r.Aciklama||''};}
+        else{col='giderler';item={id:uid(),tarih:String(r.Tarih||today()),kalem:r.GiderKalemi||'Diğer',tutar:Number(r.Tutar||0),odemeYontemi:r.OdemeYontemi||'',belgeNo:r.BelgeNo||'',tedarikci:r.Tedarikci||'',aciklama:r.Aciklama||''};}
+        D[col].push(item);
+        try{await fbSet(col,item.id,item);}catch(e){}
+        count++;
+      }
+      ['uyeler','tahsilatlar','borclar','giderler'].forEach(k=>LS.s(k,D[k]));
+      document.getElementById('import-file').value='';
+      toast(`${count} kayıt aktarıldı ✓`);
+    }catch(err){toast('Aktarma hatası: '+err.message,'err');}
+    finally{btn.textContent='↑ İçe Aktar';btn.disabled=false;}
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ===== SETTINGS =====
+function refreshSettings(){
+  const s=D.settings;
+  ['bina','adres','yon','tel','aidat','yil'].forEach(k=>{
+    const map={bina:'binaAdi',adres:'adres',yon:'yonetici',tel:'tel',aidat:'standartAidat',yil:'yil'};
+    const el=document.getElementById('s-'+k);
+    if(el)el.value=s[map[k]]||'';
+  });
+  document.getElementById('bina-label').textContent=s.binaAdi||'Bina / Site Adı';
+}
+async function saveBina(){
+  D.settings={...D.settings,binaAdi:document.getElementById('s-bina').value,adres:document.getElementById('s-adres').value,yonetici:document.getElementById('s-yon').value,tel:document.getElementById('s-tel').value,standartAidat:document.getElementById('s-aidat').value,yil:document.getElementById('s-yil').value};
+  LS.s('settings',D.settings);
+  try{await fbSetMeta('settings',D.settings);}catch(e){}
+  document.getElementById('bina-label').textContent=D.settings.binaAdi||'Bina / Site Adı';
+  toast('Bina bilgileri kaydedildi ✓');
+}
+async function clearAll(){
+  if(prompt('Tüm verileri silmek için "SİL" yazın:')!=='SİL')return;
+  ['uyeler','tahsilatlar','borclar','giderler'].forEach(k=>{D[k]=[];LS.s(k,[]);});
+  toast('Tüm veriler silindi!','err');
+  refreshCurrent();
+}
+
+// ===== EXCEL =====
+function xlExport(rows,name){
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Veri');
+  XLSX.writeFile(wb,name+'.xlsx');
+}
+
+// ===== INIT =====
+switchImportTab('uye');
+document.getElementById('import-desc').textContent=importDesc['uye'];
+refreshSettings();
+
+// close modals on overlay click
+document.querySelectorAll('.mo').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
 </script>
 </body>
 </html>
