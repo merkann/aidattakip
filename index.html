@@ -309,8 +309,29 @@ service cloud.firestore {
     </div>
     <div class="card" style="border-color:#ef444433">
       <div class="st" style="margin-top:0;color:var(--red)">Tehlikeli Bölge</div>
-      <p style="font-size:12px;color:var(--text3);margin:10px 0">Bu işlem geri alınamaz.</p>
-      <button class="bd" onclick="clearAll()">Tüm Verileri Sil</button>
+      <p style="font-size:12px;color:var(--text3);margin:10px 0 14px">Bu işlemler geri alınamaz.</p>
+      <div style="display:grid;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border)">
+          <div><div style="font-size:13px;font-weight:500">Tahsilatları Sil</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Tüm tahsilat kayıtları silinir, üyeler ve borçlar korunur</div></div>
+          <button class="bd bsm" onclick="clearKol('tahsilatlar','Tüm tahsilatlar')">Sil</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border)">
+          <div><div style="font-size:13px;font-weight:500">Borçlandırmaları Sil</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Tüm borç kayıtları silinir, üyeler ve tahsilatlar korunur</div></div>
+          <button class="bd bsm" onclick="clearKol('borclar','Tüm borçlandırmalar')">Sil</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border)">
+          <div><div style="font-size:13px;font-weight:500">Giderleri Sil</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Tüm gider kayıtları silinir</div></div>
+          <button class="bd bsm" onclick="clearKol('giderler','Tüm giderler')">Sil</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border)">
+          <div><div style="font-size:13px;font-weight:500">Üyeleri Sil</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Tüm üye/daire kayıtları silinir</div></div>
+          <button class="bd bsm" onclick="clearKol('uyeler','Tüm üyeler')">Sil</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#ef444411;border-radius:var(--r);border:1px solid #ef444433">
+          <div><div style="font-size:13px;font-weight:600;color:var(--red)">Tüm Verileri Sil</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Üyeler, tahsilatlar, borçlar ve giderler tamamen silinir</div></div>
+          <button class="bd bsm" onclick="clearAll()">Tümünü Sil</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1140,6 +1161,24 @@ async function saveBina(){
   try{await fbSetMeta('settings',D.settings);}catch(e){}
   document.getElementById('bina-label').textContent=D.settings.binaAdi||'Bina / Site Adı';
   toast('Bina bilgileri kaydedildi ✓');
+}
+async function clearKol(kol,ad){
+  if(!confirm(ad+' silinecek. Emin misiniz?\n\nBu işlem geri alınamaz!'))return;
+  // Firebase'den de sil
+  if(fbDB){
+    loader(true);
+    try{
+      const snap=await fbDB.collection(kol).get();
+      const batch=fbDB.batch();
+      snap.docs.forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+    }catch(e){console.error(e);}
+    loader(false);
+  }
+  D[kol]=[];
+  LS.s(kol,[]);
+  toast(ad+' silindi.','err');
+  refreshCurrent();
 }
 async function clearAll(){
   if(prompt('Tüm verileri silmek için "SİL" yazın:')!=='SİL')return;
