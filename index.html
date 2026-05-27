@@ -106,7 +106,7 @@ tr:last-child td{border-bottom:none}
 </head>
 <body>
 
-<div id="loader" class="ldr"><div class="spin-c"></div><div style="color:var(--text2);font-size:13px">Yükleniyor...</div></div>
+<div id="loader" class="ldr"><div class="spin-c"></div><div style="color:var(--text2);font-size:13px" id="loader-msg">Yükleniyor...</div></div>
 <div class="toast" id="toast"></div>
 
 <!-- ══════════════ GİRİŞ EKRANI ══════════════ -->
@@ -428,7 +428,11 @@ function toast(msg,type='ok'){
   t.textContent=msg;t.className='toast show t-'+(type==='err'?'err':type==='info'?'info':'ok');
   clearTimeout(t._t);t._t=setTimeout(()=>t.className='toast',3500);
 }
-function loader(show){document.getElementById('loader').className='ldr'+(show?' show':'');}
+function loader(show,msg){
+  document.getElementById('loader').className='ldr'+(show?' show':'');
+  const m=document.getElementById('loader-msg');
+  if(m)m.textContent=msg||'Yükleniyor...';
+}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function openModal(id){document.getElementById(id).classList.add('open');}
 
@@ -505,8 +509,10 @@ async function startFirebase(cfg){
   fbApp=firebase.initializeApp(cfg,'ap_'+Date.now());
   fbDB=firebase.firestore(fbApp);
   fbAuth=firebase.auth(fbApp);
-  // test connection
-  await fbDB.collection('_meta').doc('test').set({t:Date.now()});
+  // 10 saniye timeout
+  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Bağlantı zaman aşımına uğradı. İnternet bağlantınızı ve Firebase ayarlarını kontrol edin.')),10000));
+  const connect=fbDB.collection('_meta').doc('test').set({t:Date.now()});
+  await Promise.race([connect,timeout]);
   // load settings
   const s=await fbDB.collection('_meta').doc('settings').get();
   if(s.exists)D.settings={...D.settings,...s.data()};
@@ -1320,24 +1326,26 @@ function xlExport(rows,name){const ws=XLSX.utils.json_to_sheet(rows);const wb=XL
 (async()=>{
   const saved=LS.g('fbCfg');
   if(saved?.apiKey){
-    loader(true);
+    loader(true,'Firebase bağlanıyor...');
     try{
       await startFirebase(saved);
       document.getElementById('config-form').style.display='none';
       document.getElementById('login-form').style.display='block';
       document.getElementById('login-bina-ad').textContent=D.settings.binaAdi||'AidatPro';
-      // check if already signed in
+      loader(true,'Oturum kontrol ediliyor...');
       fbAuth.onAuthStateChanged(async user=>{
         if(user){
-          const snap=await fbDB.collection('kullanicilar').where('email','==',user.email).get();
-          if(!snap.empty){
-            const kul=snap.docs[0].data();
-            currentUser={uid:user.uid,email:user.email,rol:kul.rol||'daire',ad:kul.ad||user.email,tel:kul.tel||'',daireId:kul.daireId||null,kulId:snap.docs[0].id};
-            afterLogin();
-          } else {
-            // Auth'da var ama kullanicilar koleksiyonunda yok — ilk kurulum kontrolü
-            await checkFirstRun();
-          }
+          loader(true,'Kullanıcı yükleniyor...');
+          try{
+            const snap=await fbDB.collection('kullanicilar').where('email','==',user.email).get();
+            if(!snap.empty){
+              const kul=snap.docs[0].data();
+              currentUser={uid:user.uid,email:user.email,rol:kul.rol||'daire',ad:kul.ad||user.email,tel:kul.tel||'',daireId:kul.daireId||null,kulId:snap.docs[0].id};
+              afterLogin();
+            } else {
+              await checkFirstRun();
+            }
+          }catch(e){console.error(e);await checkFirstRun();}
         } else {
           await checkFirstRun();
         }
@@ -1345,14 +1353,15 @@ function xlExport(rows,name){const ws=XLSX.utils.json_to_sheet(rows);const wb=XL
       });
     }catch(e){
       console.error(e);
+      loader(false);
+      LS.s('fbCfg',null);
       document.getElementById('config-form').style.display='block';
       document.getElementById('login-form').style.display='none';
-      loader(false);
+      toast('⚠️ '+e.message,'err');
     }
   } else {
     loader(false);
   }
-  // modal close on overlay click
   document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 })();
 </script>
