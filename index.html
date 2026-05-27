@@ -138,7 +138,7 @@ tr:last-child td{border-bottom:none}
       <div class="fg">
         <div id="login-bina-ad" style="text-align:center;font-size:13px;color:var(--text2);padding-bottom:8px;border-bottom:1px solid var(--border)"></div>
         <div><label>E-posta</label><input type="email" id="l-email" placeholder="ornek@mail.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
-        <div style="position:relative">
+        <div>
           <label>Şifre</label>
           <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
         </div>
@@ -147,6 +147,21 @@ tr:last-child td{border-bottom:none}
       </div>
       <div style="margin-top:14px;text-align:center;font-size:11px;color:var(--text3)">
         Şifrenizi mi unuttunuz? <span style="color:var(--accent);cursor:pointer" onclick="resetPass()">Sıfırla</span>
+      </div>
+
+      <!-- İlk Admin Kurulumu -->
+      <div id="ilk-admin-box" style="display:none;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="background:#22c55e11;border:1px solid #22c55e33;border-radius:var(--r);padding:10px 13px;font-size:12px;color:var(--green);margin-bottom:14px;line-height:1.6">
+          🚀 <strong>İlk Kurulum:</strong> Sisteme hiç kullanıcı eklenmemiş. Aşağıdan admin hesabınızı oluşturun.
+        </div>
+        <div class="fg">
+          <div><label>Admin Adı Soyadı *</label><input id="ia-ad" placeholder="Ad Soyad"></div>
+          <div><label>Admin E-posta *</label><input type="email" id="ia-mail" placeholder="admin@mail.com"></div>
+          <div><label>Şifre * (en az 6 karakter)</label><input type="password" id="ia-pass" placeholder="••••••••"></div>
+          <div><label>Bina / Site Adı</label><input id="ia-bina" placeholder="Örn: Güneş Sitesi"></div>
+          <div id="ia-err" style="display:none;font-size:12px;color:var(--red);padding:6px;background:#ef444411;border-radius:var(--r)"></div>
+          <button class="bs" onclick="createFirstAdmin()">✓ Admin Hesabı Oluştur & Giriş Yap</button>
+        </div>
       </div>
     </div>
   </div>
@@ -434,9 +449,55 @@ async function initFromConfig(){
     document.getElementById('config-form').style.display='none';
     document.getElementById('login-form').style.display='block';
     document.getElementById('login-bina-ad').textContent=D.settings.binaAdi||'AidatPro';
+    // Kullanıcı var mı kontrol et
+    await checkFirstRun();
     toast('Firebase bağlandı ✓','ok');
   }catch(e){toast('Bağlantı hatası: '+e.message,'err');}
   finally{loader(false);}
+}
+
+async function checkFirstRun(){
+  try{
+    const snap=await fbDB.collection('kullanicilar').limit(1).get();
+    const box=document.getElementById('ilk-admin-box');
+    if(snap.empty){
+      // Hiç kullanıcı yok — ilk kurulum göster
+      if(box)box.style.display='block';
+    } else {
+      if(box)box.style.display='none';
+    }
+  }catch(e){console.error(e);}
+}
+
+async function createFirstAdmin(){
+  const ad=document.getElementById('ia-ad').value.trim();
+  const email=document.getElementById('ia-mail').value.trim();
+  const pass=document.getElementById('ia-pass').value;
+  const bina=document.getElementById('ia-bina').value.trim();
+  const errEl=document.getElementById('ia-err');
+  errEl.style.display='none';
+  if(!ad||!email||!pass){errEl.textContent='Ad, e-posta ve şifre zorunludur!';errEl.style.display='block';return;}
+  if(pass.length<6){errEl.textContent='Şifre en az 6 karakter olmalıdır!';errEl.style.display='block';return;}
+  loader(true);
+  try{
+    // Firebase Auth'da kullanıcı oluştur
+    const cred=await fbAuth.createUserWithEmailAndPassword(email,pass);
+    // Kullanicilar koleksiyonuna admin kaydı ekle
+    const kulItem={id:cred.user.uid,ad,email,tel:'',rol:'admin',daireId:'',uid:cred.user.uid};
+    await fbSet('kullanicilar',cred.user.uid,kulItem);
+    // Bina adını kaydet
+    if(bina){
+      D.settings.binaAdi=bina;
+      await fbSetMeta('settings',D.settings);
+    }
+    // Giriş yap
+    currentUser={uid:cred.user.uid,email,rol:'admin',ad,tel:'',daireId:null,kulId:cred.user.uid};
+    toast('Admin hesabı oluşturuldu! Hoş geldiniz 🎉');
+    afterLogin();
+  }catch(e){
+    errEl.textContent=e.message.includes('email-already')?'Bu e-posta zaten kayıtlı!':e.message;
+    errEl.style.display='block';
+  }finally{loader(false);}
 }
 
 async function startFirebase(cfg){
@@ -1273,7 +1334,12 @@ function xlExport(rows,name){const ws=XLSX.utils.json_to_sheet(rows);const wb=XL
             const kul=snap.docs[0].data();
             currentUser={uid:user.uid,email:user.email,rol:kul.rol||'daire',ad:kul.ad||user.email,tel:kul.tel||'',daireId:kul.daireId||null,kulId:snap.docs[0].id};
             afterLogin();
+          } else {
+            // Auth'da var ama kullanicilar koleksiyonunda yok — ilk kurulum kontrolü
+            await checkFirstRun();
           }
+        } else {
+          await checkFirstRun();
         }
         loader(false);
       });
