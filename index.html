@@ -208,6 +208,7 @@ tr:last-child td{border-bottom:none}
           <div class="user-role" id="user-role-lbl">—</div>
         </div>
       </div>
+      <button class="nav" onclick="loadData(true)">↻ Verileri Yenile</button>
       <button class="nav" onclick="doLogout()" style="color:var(--red)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Çıkış Yap
       </button>
@@ -507,7 +508,7 @@ async function createFirstAdmin(){
     // Giriş yap
     currentUser={uid:cred.user.uid,email,rol:'admin',ad,tel:'',daireId:null,kulId:cred.user.uid};
     toast('Admin hesabı oluşturuldu! Hoş geldiniz 🎉');
-    afterLogin();
+    await afterLogin();
   }catch(e){
     errEl.textContent=e.message.includes('email-already')?'Bu e-posta zaten kayıtlı!':e.message;
     errEl.style.display='block';
@@ -534,20 +535,78 @@ async function startFirebase(cfg){
   setupListeners();
 }
 
-function setupListeners(){
-  unsubs.forEach(u=>u&&u());unsubs.length=0;
-  ['uyeler','tahsilatlar','borclar','giderler'].forEach(col=>{
-    const u=fbDB.collection(col).onSnapshot(snap=>{D[col]=snap.docs.map(d=>({id:d.id,...d.data()}));refreshCurrent();});
-    unsubs.push(u);
-  });
-  unsubs.push(fbDB.collection('_meta').doc('settings').onSnapshot(d=>{if(d.exists){D.settings={...D.settings,...d.data()};document.getElementById('bina-label').textContent=D.settings.binaAdi||'';}}));
-  unsubs.push(fbDB.collection('_meta').doc('giderKalemleri').onSnapshot(d=>{if(d.exists&&d.data().list)D.giderKalemleri=d.data().list;}));
-  unsubs.push(fbDB.collection('kullanicilar').onSnapshot(snap=>{D.kullanicilar=snap.docs.map(d=>({id:d.id,...d.data()}));}));
+async function loadData(force=false){
+  if(!fbDB)return;
+
+  const now=Date.now();
+  if(!force && now-lastDataLoadAt<1500)return;
+  lastDataLoadAt=now;
+
+  try{
+    loader(true,'Veriler yükleniyor...');
+
+    const [uyelerSnap,tahSnap,borcSnap,giderSnap,kulSnap,setSnap,kalemSnap]=await Promise.all([
+      fbDB.collection('uyeler').get(),
+      fbDB.collection('tahsilatlar').get(),
+      fbDB.collection('borclar').get(),
+      fbDB.collection('giderler').get(),
+      fbDB.collection('kullanicilar').get(),
+      fbDB.collection('_meta').doc('settings').get(),
+      fbDB.collection('_meta').doc('giderKalemleri').get()
+    ]);
+
+    D.uyeler=uyelerSnap.docs.map(d=>({id:d.id,...d.data()}));
+    D.tahsilatlar=tahSnap.docs.map(d=>({id:d.id,...d.data()}));
+    D.borclar=borcSnap.docs.map(d=>({id:d.id,...d.data()}));
+    D.giderler=giderSnap.docs.map(d=>({id:d.id,...d.data()}));
+    D.kullanicilar=kulSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    if(setSnap.exists){
+      D.settings={...D.settings,...setSnap.data()};
+      const bl=document.getElementById('bina-label');
+      if(bl)bl.textContent=D.settings.binaAdi||'';
+    }
+
+    if(kalemSnap.exists&&kalemSnap.data().list){
+      D.giderKalemleri=kalemSnap.data().list;
+    }
+
+    refreshCurrent();
+
+  }catch(e){
+    console.error(e);
+    toast('Veriler yüklenemedi: '+e.message,'err');
+  }finally{
+    loader(false);
+  }
 }
 
-async function fbSet(col,id,data){if(fbDB){const {id:_,...r}=data;await fbDB.collection(col).doc(id).set(r,{merge:true});}}
-async function fbDel(col,id){if(fbDB){await fbDB.collection(col).doc(id).delete();}}
-async function fbSetMeta(docId,data){if(fbDB){await fbDB.collection('_meta').doc(docId).set(data);}}
+function setupListeners(){
+  // Günlük Firestore limitini korumak için canlı onSnapshot dinlemeleri kaldırıldı.
+  // Veri sadece girişte ve kayıt işlemlerinden sonra tek seferlik yüklenir.
+  unsubs.forEach(u=>u&&u());
+  unsubs.length=0;
+}
+
+async function fbSet(col,id,data){
+  if(fbDB){
+    const {id:_,...r}=data;
+    await fbDB.collection(col).doc(id).set(r,{merge:true});
+    if(!bulkWriteMode)await loadData(true);
+  }
+}
+async function fbDel(col,id){
+  if(fbDB){
+    await fbDB.collection(col).doc(id).delete();
+    if(!bulkWriteMode)await loadData(true);
+  }
+}
+async function fbSetMeta(docId,data){
+  if(fbDB){
+    await fbDB.collection('_meta').doc(docId).set(data);
+    if(!bulkWriteMode)await loadData(true);
+  }
+}
 
 
 window.addEventListener('load', async () => {
@@ -577,7 +636,7 @@ window.addEventListener('load', async () => {
             kulId:snap.docs[0].id
           };
 
-          afterLogin();
+          await afterLogin();
         }
       }else{
         await checkFirstRun();
@@ -608,14 +667,15 @@ async function doLogin(){
     if(snap.empty){await fbAuth.signOut();throw new Error('Bu hesap sisteme tanımlı değil. Yöneticinizle iletişime geçin.');}
     const kul=snap.docs[0].data();
     currentUser={uid:cred.user.uid,email,rol:kul.rol||'daire',ad:kul.ad||email,tel:kul.tel||'',daireId:kul.daireId||null,kulId:snap.docs[0].id};
-    afterLogin();
+    await afterLogin();
   }catch(e){
     errEl.textContent=e.message.includes('wrong-password')||e.message.includes('user-not-found')||e.message.includes('invalid-credential')?'E-posta veya şifre hatalı!':e.message;
     errEl.style.display='block';
   }finally{loader(false);}
 }
 
-function afterLogin(){
+async function afterLogin(){
+  await loadData(true);
   document.getElementById('login-screen').style.display='none';
   const app=document.getElementById('app');
   app.classList.add('show');
@@ -657,6 +717,9 @@ async function resetPass(){
 // PAGE ROUTING
 // ══════════════════════════════════════════
 let currentPage='dashboard';
+let bulkWriteMode=false;
+let refreshTimer=null;
+let lastDataLoadAt=0;
 function go(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));
@@ -667,7 +730,11 @@ function go(page){
   currentPage=page;
   renderPage(page);
 }
-function refreshCurrent(){renderPage(currentPage);}
+function refreshCurrent(){
+  if(bulkWriteMode)return;
+  clearTimeout(refreshTimer);
+  refreshTimer=setTimeout(()=>renderPage(currentPage),250);
+}
 function renderPage(p){
   if(p==='dashboard')renderDash();
   else if(p==='uyeler')renderUyeler();
@@ -707,7 +774,10 @@ function renderDash(){
 // DAİRE KULLANICISI SAYFASI
 // ══════════════════════════════════════════
 function showDairePage(){
-  go('daire');
+  currentPage='daire';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const dp=document.getElementById('p-daire');
+  if(dp)dp.classList.add('active');
   const u=currentUser;
   const daire=D.uyeler.find(x=>x.id===u.daireId);
   const borc=D.borclar.filter(b=>b.uyeId===u.daireId).reduce((s,b)=>s+Number(b.tutar||0),0);
@@ -1024,8 +1094,8 @@ async function saveToplu(){
       });
     }
 
-    // Firestore batch tek seferde çoklu yazma yapar.
-    // Güvenli olması için 450 kayıtta bir commit yapılır.
+    bulkWriteMode=true;
+
     let batch=fbDB.batch();
     let batchCount=0;
     const commits=[];
@@ -1041,7 +1111,6 @@ async function saveToplu(){
 
       const id=uid();
       const item={
-        id,
         uyeId,
         tarih,
         tutar,
@@ -1052,8 +1121,7 @@ async function saveToplu(){
       };
 
       const ref=fbDB.collection('borclar').doc(id);
-      const {id:_,...kayit}=item;
-      batch.set(ref,kayit);
+      batch.set(ref,item);
 
       count++;
       batchCount++;
@@ -1070,6 +1138,7 @@ async function saveToplu(){
     }
 
     if(count===0){
+      bulkWriteMode=false;
       toast('Kaydedilecek geçerli tutar bulunamadı!','err');
       return;
     }
@@ -1077,10 +1146,18 @@ async function saveToplu(){
     await Promise.all(commits);
 
     closeModal('mo-toplu');
+
+    // Büyük kayıt sonrası borçlandırma tablosunu anında yeniden çizmek tarayıcıyı kilitleyebiliyor.
+    // Bu yüzden işlem sonrası güvenli sayfa olan genel bakışa dönüyoruz.
+    bulkWriteMode=false;
+    await loadData(true);
+    currentPage='dashboard';
+    go('dashboard');
+
     toast(count+' üye toplu borçlandırıldı ✓');
-    refreshCurrent();
 
   }catch(e){
+    bulkWriteMode=false;
     console.error(e);
     toast('Toplu borçlandırma hatası: '+e.message,'err');
   }finally{
