@@ -121,7 +121,7 @@ tr:last-child td{border-bottom:none}
     </div>
 
     <!-- Firebase kurulmamışsa config formu -->
-    <div id="config-form">
+    <div id="config-form" style="display:none">
       <div style="background:#f59e0b18;border:1px solid #f59e0b44;border-radius:var(--r);padding:10px 13px;font-size:12px;color:var(--amber);margin-bottom:16px">
         ⚙️ Henüz Firebase bağlantısı kurulmamış. Aşağıya firebaseConfig yapıştırın.
       </div>
@@ -411,6 +411,19 @@ const LS={g:k=>{try{return JSON.parse(localStorage.getItem('ap_'+k)||'null')}cat
 const DEF_KALEM=['Elektrik','Su','Doğalgaz','Asansör Bakım','Temizlik','Güvenlik','Bahçe Bakım','Hasar Onarım','Diğer'];
 
 let fbApp=null,fbDB=null,fbAuth=null;
+
+// Firebase bağlantısı artık sabit olarak uygulama içinde tanımlıdır.
+// Kullanıcılar her girişte config girmek zorunda kalmaz.
+const firebaseConfig = {
+  apiKey: "AIzaSyCimcwuBlo3UOHPFLA2C725ISTIzJDsB0c",
+  authDomain: "aidatpro-92a92.firebaseapp.com",
+  databaseURL: "https://aidatpro-92a92-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "aidatpro-92a92",
+  storageBucket: "aidatpro-92a92.firebasestorage.app",
+  messagingSenderId: "440693513395",
+  appId: "1:440693513395:web:679cf5f15d9e3e83b4e4c6"
+};
+
 let currentUser=null; // {uid, email, rol, ad, tel, daireId}
 let D={uyeler:[],tahsilatlar:[],borclar:[],giderler:[],giderKalemleri:DEF_KALEM,settings:{binaAdi:'Bina / Site Adı',yil:new Date().getFullYear()},kullanicilar:[]};
 const unsubs=[];
@@ -650,7 +663,10 @@ function renderDash(){
 // DAİRE KULLANICISI SAYFASI
 // ══════════════════════════════════════════
 function showDairePage(){
-  go('daire');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const dairePageEl=document.getElementById('p-daire');
+  if(dairePageEl)dairePageEl.classList.add('active');
+  currentPage='daire';
   const u=currentUser;
   const daire=D.uyeler.find(x=>x.id===u.daireId);
   const borc=D.borclar.filter(b=>b.uyeId===u.daireId).reduce((s,b)=>s+Number(b.tutar||0),0);
@@ -1324,44 +1340,61 @@ function xlExport(rows,name){const ws=XLSX.utils.json_to_sheet(rows);const wb=XL
 // BOOT
 // ══════════════════════════════════════════
 (async()=>{
-  const saved=LS.g('fbCfg');
-  if(saved?.apiKey){
-    loader(true,'Firebase bağlanıyor...');
-    try{
-      await startFirebase(saved);
-      document.getElementById('config-form').style.display='none';
-      document.getElementById('login-form').style.display='block';
-      document.getElementById('login-bina-ad').textContent=D.settings.binaAdi||'AidatPro';
-      loader(true,'Oturum kontrol ediliyor...');
-      fbAuth.onAuthStateChanged(async user=>{
+  loader(true,'Firebase bağlanıyor...');
+  try{
+    await startFirebase(firebaseConfig);
+
+    const configForm=document.getElementById('config-form');
+    const loginForm=document.getElementById('login-form');
+    if(configForm)configForm.style.display='none';
+    if(loginForm)loginForm.style.display='block';
+
+    const binaAd=document.getElementById('login-bina-ad');
+    if(binaAd)binaAd.textContent=D.settings.binaAdi||'AidatPro';
+
+    loader(true,'Oturum kontrol ediliyor...');
+    fbAuth.onAuthStateChanged(async user=>{
+      try{
         if(user){
           loader(true,'Kullanıcı yükleniyor...');
-          try{
-            const snap=await fbDB.collection('kullanicilar').where('email','==',user.email).get();
-            if(!snap.empty){
-              const kul=snap.docs[0].data();
-              currentUser={uid:user.uid,email:user.email,rol:kul.rol||'daire',ad:kul.ad||user.email,tel:kul.tel||'',daireId:kul.daireId||null,kulId:snap.docs[0].id};
-              afterLogin();
-            } else {
-              await checkFirstRun();
-            }
-          }catch(e){console.error(e);await checkFirstRun();}
+          const snap=await fbDB.collection('kullanicilar').where('email','==',user.email).get();
+          if(!snap.empty){
+            const kul=snap.docs[0].data();
+            currentUser={
+              uid:user.uid,
+              email:user.email,
+              rol:kul.rol||'daire',
+              ad:kul.ad||user.email,
+              tel:kul.tel||'',
+              daireId:kul.daireId||null,
+              kulId:snap.docs[0].id
+            };
+            afterLogin();
+          } else {
+            await fbAuth.signOut();
+            await checkFirstRun();
+            toast('Bu hesap sisteme tanımlı değil.','err');
+          }
         } else {
           await checkFirstRun();
         }
+      }catch(e){
+        console.error(e);
+        toast('Oturum kontrol hatası: '+e.message,'err');
+      }finally{
         loader(false);
-      });
-    }catch(e){
-      console.error(e);
-      loader(false);
-      LS.s('fbCfg',null);
-      document.getElementById('config-form').style.display='block';
-      document.getElementById('login-form').style.display='none';
-      toast('⚠️ '+e.message,'err');
-    }
-  } else {
+      }
+    });
+  }catch(e){
+    console.error(e);
     loader(false);
+    const configForm=document.getElementById('config-form');
+    const loginForm=document.getElementById('login-form');
+    if(configForm)configForm.style.display='none';
+    if(loginForm)loginForm.style.display='none';
+    toast('Firebase bağlantı hatası: '+e.message,'err');
   }
+
   document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 })();
 </script>
