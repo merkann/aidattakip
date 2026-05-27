@@ -522,25 +522,47 @@ async function startFirebase(cfg){
   fbApp=firebase.initializeApp(cfg,'ap_'+Date.now());
   fbDB=firebase.firestore(fbApp);
   fbAuth=firebase.auth(fbApp);
-  // 10 saniye timeout
-  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Bağlantı zaman aşımına uğradı. İnternet bağlantınızı ve Firebase ayarlarını kontrol edin.')),10000));
-  const connect=fbDB.collection('_meta').doc('test').set({t:Date.now()});
-  await Promise.race([connect,timeout]);
-  // load settings
-  const s=await fbDB.collection('_meta').doc('settings').get();
-  if(s.exists)D.settings={...D.settings,...s.data()};
+
+  // Burada veritabanına test yazma işlemi yapılmıyor.
+  // Önceki sürüm _meta/test alanına yazmaya çalıştığı için kurallar, ağ gecikmesi
+  // veya Firebase kısıtlaması olduğunda uygulama giriş ekranına hiç geçmiyordu.
+  try{
+    const settingsPromise=fbDB.collection('_meta').doc('settings').get();
+    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('settings-timeout')),4000));
+    const s=await Promise.race([settingsPromise,timeout]);
+    if(s && s.exists)D.settings={...D.settings,...s.data()};
+  }catch(e){
+    console.warn('Ayarlar ilk açılışta okunamadı, giriş ekranı yine açılacak:',e);
+  }
+
   setupListeners();
 }
 
 function setupListeners(){
   unsubs.forEach(u=>u&&u());unsubs.length=0;
+  const onErr=e=>{
+    console.error('Firestore dinleme hatası:',e);
+    toast('Veritabanı okuma hatası: '+(e.message||e),'err');
+  };
   ['uyeler','tahsilatlar','borclar','giderler'].forEach(col=>{
-    const u=fbDB.collection(col).onSnapshot(snap=>{D[col]=snap.docs.map(d=>({id:d.id,...d.data()}));refreshCurrent();});
+    const u=fbDB.collection(col).onSnapshot(
+      snap=>{D[col]=snap.docs.map(d=>({id:d.id,...d.data()}));refreshCurrent();},
+      onErr
+    );
     unsubs.push(u);
   });
-  unsubs.push(fbDB.collection('_meta').doc('settings').onSnapshot(d=>{if(d.exists){D.settings={...D.settings,...d.data()};document.getElementById('bina-label').textContent=D.settings.binaAdi||'';}}));
-  unsubs.push(fbDB.collection('_meta').doc('giderKalemleri').onSnapshot(d=>{if(d.exists&&d.data().list)D.giderKalemleri=d.data().list;}));
-  unsubs.push(fbDB.collection('kullanicilar').onSnapshot(snap=>{D.kullanicilar=snap.docs.map(d=>({id:d.id,...d.data()}));}));
+  unsubs.push(fbDB.collection('_meta').doc('settings').onSnapshot(
+    d=>{if(d.exists){D.settings={...D.settings,...d.data()};const bl=document.getElementById('bina-label');if(bl)bl.textContent=D.settings.binaAdi||'';}},
+    onErr
+  ));
+  unsubs.push(fbDB.collection('_meta').doc('giderKalemleri').onSnapshot(
+    d=>{if(d.exists&&d.data().list)D.giderKalemleri=d.data().list;},
+    onErr
+  ));
+  unsubs.push(fbDB.collection('kullanicilar').onSnapshot(
+    snap=>{D.kullanicilar=snap.docs.map(d=>({id:d.id,...d.data()}));},
+    onErr
+  ));
 }
 
 async function fbSet(col,id,data){if(fbDB){const {id:_,...r}=data;await fbDB.collection(col).doc(id).set(r,{merge:true});}}
@@ -1391,8 +1413,8 @@ function xlExport(rows,name){const ws=XLSX.utils.json_to_sheet(rows);const wb=XL
     const configForm=document.getElementById('config-form');
     const loginForm=document.getElementById('login-form');
     if(configForm)configForm.style.display='none';
-    if(loginForm)loginForm.style.display='none';
-    toast('Firebase bağlantı hatası: '+e.message,'err');
+    if(loginForm)loginForm.style.display='block';
+    toast('Firebase başlatma hatası: '+e.message,'err');
   }
 
   document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
