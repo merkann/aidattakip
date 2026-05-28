@@ -412,17 +412,9 @@ const LS={g:k=>{try{return JSON.parse(localStorage.getItem('ap_'+k)||'null')}cat
 const DEF_KALEM=['Elektrik','Su','Doğalgaz','Asansör Bakım','Temizlik','Güvenlik','Bahçe Bakım','Hasar Onarım','Diğer'];
 
 let fbApp=null,fbDB=null,fbAuth=null;
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCimcwuBlo3UOHPFLA2C725ISTIzJDsB0c",
-  authDomain: "aidatpro-92a92.firebaseapp.com",
-  databaseURL: "https://aidatpro-92a92-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "aidatpro-92a92",
-  storageBucket: "aidatpro-92a92.firebasestorage.app",
-  messagingSenderId: "440693513395",
-  appId: "1:440693513395:web:679cf5f15d9e3e83b4e4c6"
-};
-let currentUser=null; // {uid, email, rol, ad, tel, daireId}
+let currentUser=null;
+let bulkWriteMode=false;
+let lastDataLoadAt=0;
 let D={uyeler:[],tahsilatlar:[],borclar:[],giderler:[],giderKalemleri:DEF_KALEM,settings:{binaAdi:'Bina / Site Adı',yil:new Date().getFullYear()},kullanicilar:[]};
 const unsubs=[];
 
@@ -519,12 +511,16 @@ async function startFirebase(cfg){
   if(fbApp){
     try{fbApp.delete()}catch{}
   }
-
   fbApp=firebase.initializeApp(cfg,'ap_'+Date.now());
   fbDB=firebase.firestore(fbApp);
   fbAuth=firebase.auth(fbApp);
-
-  await fbDB.enableNetwork();
+  // 10 saniye timeout — takılıp kalmayı önler
+  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Bağlantı zaman aşımı. İnternet bağlantınızı kontrol edin.')),10000));
+  const test=fbDB.collection('_meta').doc('ping').set({t:Date.now()});
+  await Promise.race([test,timeout]);
+  // settings yükle
+  const s=await fbDB.collection('_meta').doc('settings').get();
+  if(s.exists)D.settings={...D.settings,...s.data()};
   setupListeners();
 }
 
@@ -1586,10 +1582,10 @@ function xlExport(rows,name){const ws=XLSX.utils.json_to_sheet(rows);const wb=XL
     }catch(e){
       console.error(e);
       loader(false);
-      LS.s('fbCfg',null);
-      document.getElementById('config-form').style.display='block';
-      document.getElementById('login-form').style.display='none';
-      toast('⚠️ '+e.message,'err');
+      // Config'i SİLME — sadece hata göster, tekrar deneyebilsin
+      document.getElementById('config-form').style.display='none';
+      document.getElementById('login-form').style.display='block';
+      toast('⚠️ Bağlantı hatası: '+e.message+' Sayfayı yenileyin.','err');
     }
   } else {
     loader(false);
