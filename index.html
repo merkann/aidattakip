@@ -603,17 +603,45 @@ async function doLogin(){
   const errEl=document.getElementById('login-err');
   errEl.style.display='none';
   if(!email||!pass){errEl.textContent='E-posta ve şifre zorunludur!';errEl.style.display='block';return;}
-  loader(true);
+
+  // Firebase henüz başlamamışsa başlat
+  if(!fbAuth||!fbDB){
+    const saved=LS.g('fbCfg');
+    if(!saved?.apiKey){
+      errEl.textContent='Firebase bağlantısı kurulamadı. Sayfayı yenileyin.';
+      errEl.style.display='block';return;
+    }
+    loader(true,'Firebase bağlanıyor...');
+    try{await startFirebase(saved);}
+    catch(e){
+      loader(false);
+      errEl.textContent='Bağlantı hatası: '+e.message;
+      errEl.style.display='block';return;
+    }
+  }
+
+  loader(true,'Giriş yapılıyor...');
   try{
     const cred=await fbAuth.signInWithEmailAndPassword(email,pass);
-    // get user profile from kullanicilar collection
+    loader(true,'Kullanıcı bilgileri yükleniyor...');
     const snap=await fbDB.collection('kullanicilar').where('email','==',email).get();
-    if(snap.empty){await fbAuth.signOut();throw new Error('Bu hesap sisteme tanımlı değil. Yöneticinizle iletişime geçin.');}
+    if(snap.empty){
+      await fbAuth.signOut();
+      throw new Error('Bu hesap sisteme tanımlı değil. Yöneticinizle iletişime geçin.');
+    }
     const kul=snap.docs[0].data();
     currentUser={uid:cred.user.uid,email,rol:kul.rol||'daire',ad:kul.ad||email,tel:kul.tel||'',daireId:kul.daireId||null,kulId:snap.docs[0].id};
     await afterLogin();
   }catch(e){
-    errEl.textContent=e.message.includes('wrong-password')||e.message.includes('user-not-found')||e.message.includes('invalid-credential')?'E-posta veya şifre hatalı!':e.message;
+    const msg=e.message;
+    errEl.textContent=
+      msg.includes('wrong-password')||msg.includes('user-not-found')||msg.includes('invalid-credential')||msg.includes('invalid-login-credentials')
+        ?'E-posta veya şifre hatalı!'
+        :msg.includes('too-many-requests')
+          ?'Çok fazla başarısız deneme. Lütfen bekleyin.'
+          :msg.includes('network')
+            ?'İnternet bağlantısı yok.'
+            :msg;
     errEl.style.display='block';
   }finally{loader(false);}
 }
@@ -661,9 +689,7 @@ async function resetPass(){
 // PAGE ROUTING
 // ══════════════════════════════════════════
 let currentPage='dashboard';
-let bulkWriteMode=false;
 let refreshTimer=null;
-let lastDataLoadAt=0;
 function go(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));
