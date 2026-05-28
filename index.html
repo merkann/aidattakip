@@ -525,18 +525,13 @@ async function startFirebase(cfg){
   fbAuth=firebase.auth(fbApp);
 
   await fbDB.enableNetwork();
-
-  const s=await fbDB.collection('_meta').doc('settings').get();
-
-  if(s.exists){
-    D.settings={...D.settings,...s.data()};
-  }
-
   setupListeners();
 }
 
+
+
 async function loadData(force=false){
-  if(!fbDB)return;
+  if(!fbDB || !currentUser)return;
 
   const now=Date.now();
   if(!force && now-lastDataLoadAt<1500)return;
@@ -582,8 +577,8 @@ async function loadData(force=false){
 }
 
 function setupListeners(){
-  // Günlük Firestore limitini korumak için canlı onSnapshot dinlemeleri kaldırıldı.
-  // Veri sadece girişte ve kayıt işlemlerinden sonra tek seferlik yüklenir.
+  // Güvenlik ve kota için canlı Firestore dinlemeleri kullanılmıyor.
+  // Veri yalnızca kullanıcı giriş yaptıktan sonra ve gerektiğinde yüklenir.
   unsubs.forEach(u=>u&&u());
   unsubs.length=0;
 }
@@ -592,21 +587,26 @@ async function fbSet(col,id,data){
   if(fbDB){
     const {id:_,...r}=data;
     await fbDB.collection(col).doc(id).set(r,{merge:true});
-    if(!bulkWriteMode)await loadData(true);
+    if(!bulkWriteMode && currentUser)await loadData(true);
   }
 }
 async function fbDel(col,id){
   if(fbDB){
     await fbDB.collection(col).doc(id).delete();
-    if(!bulkWriteMode)await loadData(true);
+    if(!bulkWriteMode && currentUser)await loadData(true);
   }
 }
 async function fbSetMeta(docId,data){
   if(fbDB){
     await fbDB.collection('_meta').doc(docId).set(data);
-    if(!bulkWriteMode)await loadData(true);
+    if(!bulkWriteMode && currentUser)await loadData(true);
   }
 }
+}
+
+
+
+
 
 
 window.addEventListener('load', async () => {
@@ -615,37 +615,49 @@ window.addEventListener('load', async () => {
 
     document.getElementById('config-form').style.display='none';
     document.getElementById('login-form').style.display='block';
-    document.getElementById('login-bina-ad').textContent=D.settings.binaAdi||'AidatPro';
+    document.getElementById('login-bina-ad').textContent='AidatPro';
 
     fbAuth.onAuthStateChanged(async user=>{
       if(user){
-        const snap=await fbDB.collection('kullanicilar')
-          .where('email','==',user.email)
-          .get();
+        try{
+          const snap=await fbDB.collection('kullanicilar')
+            .where('email','==',user.email)
+            .get();
 
-        if(!snap.empty){
-          const kul=snap.docs[0].data();
+          if(!snap.empty){
+            const kul=snap.docs[0].data();
 
-          currentUser={
-            uid:user.uid,
-            email:user.email,
-            rol:kul.rol||'daire',
-            ad:kul.ad||user.email,
-            tel:kul.tel||'',
-            daireId:kul.daireId||null,
-            kulId:snap.docs[0].id
-          };
+            currentUser={
+              uid:user.uid,
+              email:user.email,
+              rol:kul.rol||'daire',
+              ad:kul.ad||user.email,
+              tel:kul.tel||'',
+              daireId:kul.daireId||null,
+              kulId:snap.docs[0].id
+            };
 
-          await afterLogin();
+            await afterLogin();
+          }else{
+            await fbAuth.signOut();
+            toast('Bu hesap sisteme tanımlı değil.','err');
+          }
+        }catch(e){
+          console.error(e);
+          toast('Kullanıcı bilgileri okunamadı: '+e.message,'err');
         }
       }else{
-        await checkFirstRun();
+        currentUser=null;
+        document.getElementById('app').classList.remove('show');
+        document.getElementById('login-screen').style.display='flex';
+        document.getElementById('login-form').style.display='block';
+        document.getElementById('config-form').style.display='none';
       }
     });
 
   }catch(e){
     console.error(e);
-    toast('Firebase bağlantı hatası','err');
+    toast('Firebase bağlantı hatası: '+e.message,'err');
   }
 });
 
@@ -676,6 +688,7 @@ async function doLogin(){
 
 async function afterLogin(){
   await loadData(true);
+   await loadData(true);
   document.getElementById('login-screen').style.display='none';
   const app=document.getElementById('app');
   app.classList.add('show');
@@ -733,7 +746,7 @@ function go(page){
 function refreshCurrent(){
   if(bulkWriteMode)return;
   clearTimeout(refreshTimer);
-  refreshTimer=setTimeout(()=>renderPage(currentPage),250);
+  refreshTimer=setTimeout(()=>renderPage(currentPage),300);
 }
 function renderPage(p){
   if(p==='dashboard')renderDash();
@@ -1065,6 +1078,11 @@ async function saveToplu(){
   const mod=document.querySelector('[name="tb-mod"]:checked').value;
   const checked=[...document.querySelectorAll('.tb-chk:checked')].map(c=>c.dataset.id);
 
+  if(!fbDB){
+    toast('Firebase bağlantısı yok!','err');
+    return;
+  }
+
   if(!donem){
     toast('Dönem zorunludur!','err');
     return;
@@ -1080,88 +1098,90 @@ async function saveToplu(){
     return;
   }
 
-  loader(true,'Toplu borçlandırma kaydediliyor...');
+  const sabitTutar=Number(document.getElementById('tb-tutar').value||0);
+  const tutarMap={};
+
+  if(mod==='kisi'){
+    [...document.querySelectorAll('.tb-kisi-tutar')].forEach(inp=>{
+      if(inp.value){
+        tutarMap[inp.dataset.id]=Number(inp.value);
+      }
+    });
+  }
+
+  const kayitlar=[];
+
+  for(const uyeId of checked){
+    const tutar=mod==='sabit' ? sabitTutar : Number(tutarMap[uyeId]||0);
+
+    if(!tutar || tutar<=0){
+      continue;
+    }
+
+    kayitlar.push({
+      uyeId,
+      tarih,
+      tutar,
+      cesit:kalem,
+      donem,
+      aciklama:acik,
+      createdAt:new Date().toISOString()
+    });
+  }
+
+  if(!kayitlar.length){
+    toast('Kaydedilecek geçerli tutar bulunamadı!','err');
+    return;
+  }
+
+  const onay=confirm(kayitlar.length+' adet borç kaydı oluşturulacak. Devam edilsin mi?');
+  if(!onay)return;
+
+  loader(true,'Toplu borçlandırma hazırlanıyor...');
 
   try{
-    let count=0;
-    const tutarMap={};
-
-    if(mod==='kisi'){
-      [...document.querySelectorAll('.tb-kisi-tutar')].forEach(inp=>{
-        if(inp.value){
-          tutarMap[inp.dataset.id]=Number(inp.value);
-        }
-      });
-    }
-
     bulkWriteMode=true;
 
-    let batch=fbDB.batch();
-    let batchCount=0;
-    const commits=[];
+    const chunkSize=20;
+    let yazilan=0;
 
-    for(const uyeId of checked){
-      const tutar=mod==='sabit'
-        ? Number(document.getElementById('tb-tutar').value)
-        : Number(tutarMap[uyeId]||0);
+    for(let i=0;i<kayitlar.length;i+=chunkSize){
+      const parca=kayitlar.slice(i,i+chunkSize);
+      const batch=fbDB.batch();
 
-      if(!tutar || tutar<=0){
-        continue;
+      for(const item of parca){
+        const ref=fbDB.collection('borclar').doc();
+        batch.set(ref,item);
       }
 
-      const id=uid();
-      const item={
-        uyeId,
-        tarih,
-        tutar,
-        cesit:kalem,
-        donem,
-        aciklama:acik,
-        createdAt:new Date().toISOString()
-      };
+      loader(true,'Toplu borçlandırma kaydediliyor... '+Math.min(i+parca.length,kayitlar.length)+' / '+kayitlar.length);
 
-      const ref=fbDB.collection('borclar').doc(id);
-      batch.set(ref,item);
+      await batch.commit();
 
-      count++;
-      batchCount++;
+      yazilan+=parca.length;
 
-      if(batchCount>=450){
-        commits.push(batch.commit());
-        batch=fbDB.batch();
-        batchCount=0;
-      }
+      await new Promise(resolve=>setTimeout(resolve,150));
     }
 
-    if(batchCount>0){
-      commits.push(batch.commit());
-    }
-
-    if(count===0){
-      bulkWriteMode=false;
-      toast('Kaydedilecek geçerli tutar bulunamadı!','err');
-      return;
-    }
-
-    await Promise.all(commits);
+    kayitlar.forEach(item=>{
+      D.borclar.push({id:uid(),...item});
+    });
 
     closeModal('mo-toplu');
 
-    // Büyük kayıt sonrası borçlandırma tablosunu anında yeniden çizmek tarayıcıyı kilitleyebiliyor.
-    // Bu yüzden işlem sonrası güvenli sayfa olan genel bakışa dönüyoruz.
     bulkWriteMode=false;
-    await loadData(true);
+    loader(false);
+
+    toast(yazilan+' adet borç kaydı başarıyla oluşturuldu ✓');
+
     currentPage='dashboard';
     go('dashboard');
-
-    toast(count+' üye toplu borçlandırıldı ✓');
 
   }catch(e){
     bulkWriteMode=false;
     console.error(e);
-    toast('Toplu borçlandırma hatası: '+e.message,'err');
-  }finally{
     loader(false);
+    toast('Toplu borçlandırma hatası: '+e.message,'err');
   }
 }
 
@@ -1553,7 +1573,7 @@ function xlExport(rows,name){const ws=XLSX.utils.json_to_sheet(rows);const wb=XL
             if(!snap.empty){
               const kul=snap.docs[0].data();
               currentUser={uid:user.uid,email:user.email,rol:kul.rol||'daire',ad:kul.ad||user.email,tel:kul.tel||'',daireId:kul.daireId||null,kulId:snap.docs[0].id};
-              afterLogin();
+              await afterLogin();
             } else {
               await checkFirstRun();
             }
