@@ -455,25 +455,21 @@ async function initFromConfig(){
     LS.s('fbCfg',cfg);
     document.getElementById('config-form').style.display='none';
     document.getElementById('login-form').style.display='block';
-    document.getElementById('login-bina-ad').textContent=D.settings.binaAdi||'AidatPro';
-    // Kullanıcı var mı kontrol et
-    await checkFirstRun();
-    toast('Firebase bağlandı ✓','ok');
+    document.getElementById('login-bina-ad').textContent='AidatPro';
+    // İlk admin kutusunu göster — kullanıcı yoksa zaten admin oluşturur
+    // Auth olmadan Firestore okuyamayız, bu yüzden her zaman gösteriyoruz
+    // Giriş başarılı olursa zaten kapanacak
+    document.getElementById('ilk-admin-box').style.display='block';
+    toast('Firebase bağlandı ✓ Giriş yapın veya ilk admin hesabını oluşturun.','ok');
   }catch(e){toast('Bağlantı hatası: '+e.message,'err');}
   finally{loader(false);}
 }
 
 async function checkFirstRun(){
-  try{
-    const snap=await fbDB.collection('kullanicilar').limit(1).get();
-    const box=document.getElementById('ilk-admin-box');
-    if(snap.empty){
-      // Hiç kullanıcı yok — ilk kurulum göster
-      if(box)box.style.display='block';
-    } else {
-      if(box)box.style.display='none';
-    }
-  }catch(e){console.error(e);}
+  // Auth gerektiren rules ile uyumsuz olduğu için devre dışı
+  // İlk admin kutusu her zaman görünür, giriş yapınca kapanır
+  const box=document.getElementById('ilk-admin-box');
+  if(box)box.style.display='block';
 }
 
 async function createFirstAdmin(){
@@ -514,13 +510,8 @@ async function startFirebase(cfg){
   fbApp=firebase.initializeApp(cfg,'ap_'+Date.now());
   fbDB=firebase.firestore(fbApp);
   fbAuth=firebase.auth(fbApp);
-  // 10 saniye timeout
-  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Bağlantı zaman aşımı. İnternet bağlantınızı kontrol edin.')),10000));
-  const test=fbDB.collection('_meta').doc('ping').set({t:Date.now()});
-  await Promise.race([test,timeout]);
-  // settings yükle
-  const s=await fbDB.collection('_meta').doc('settings').get();
-  if(s.exists)D.settings={...D.settings,...s.data()};
+  // Artık ping testi yok — auth gerektiren rules ile uyumlu
+  // Bağlantı doğrulaması giriş sonrası loadData ile yapılır
 }
 
 
@@ -1503,7 +1494,10 @@ function xlExport(rows,name){const ws=XLSX.utils.json_to_sheet(rows);const wb=XL
       await startFirebase(saved);
       document.getElementById('config-form').style.display='none';
       document.getElementById('login-form').style.display='block';
-      document.getElementById('login-bina-ad').textContent=D.settings.binaAdi||'AidatPro';
+      document.getElementById('login-bina-ad').textContent='AidatPro';
+      // İlk admin kutusunu gizle — sadece config yeni girilince açılır
+      const iab=document.getElementById('ilk-admin-box');
+      if(iab)iab.style.display='none';
       loader(true,'Oturum kontrol ediliyor...');
       fbAuth.onAuthStateChanged(async user=>{
         if(user){
@@ -1515,18 +1509,21 @@ function xlExport(rows,name){const ws=XLSX.utils.json_to_sheet(rows);const wb=XL
               currentUser={uid:user.uid,email:user.email,rol:kul.rol||'daire',ad:kul.ad||user.email,tel:kul.tel||'',daireId:kul.daireId||null,kulId:snap.docs[0].id};
               await afterLogin();
             } else {
-              await checkFirstRun();
+              // Auth var ama kullanicilar koleksiyonunda yok
+              await fbAuth.signOut();
+              toast('Bu hesap sisteme tanımlı değil. Yöneticinizle iletişime geçin.','err');
             }
-          }catch(e){console.error(e);await checkFirstRun();}
-        } else {
-          await checkFirstRun();
+          }catch(e){
+            console.error(e);
+            toast('Kullanıcı bilgileri yüklenemedi: '+e.message,'err');
+          }
         }
+        // user null ise sadece login ekranı göster, zaten görünüyor
         loader(false);
       });
     }catch(e){
       console.error(e);
       loader(false);
-      // Config'i SİLME — sadece hata göster, tekrar deneyebilsin
       document.getElementById('config-form').style.display='none';
       document.getElementById('login-form').style.display='block';
       toast('⚠️ Bağlantı hatası: '+e.message+' Sayfayı yenileyin.','err');
