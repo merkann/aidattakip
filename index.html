@@ -514,14 +514,13 @@ async function startFirebase(cfg){
   fbApp=firebase.initializeApp(cfg,'ap_'+Date.now());
   fbDB=firebase.firestore(fbApp);
   fbAuth=firebase.auth(fbApp);
-  // 10 saniye timeout — takılıp kalmayı önler
+  // 10 saniye timeout
   const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Bağlantı zaman aşımı. İnternet bağlantınızı kontrol edin.')),10000));
   const test=fbDB.collection('_meta').doc('ping').set({t:Date.now()});
   await Promise.race([test,timeout]);
   // settings yükle
   const s=await fbDB.collection('_meta').doc('settings').get();
   if(s.exists)D.settings={...D.settings,...s.data()};
-  setupListeners();
 }
 
 
@@ -598,64 +597,10 @@ async function fbSetMeta(docId,data){
     if(!bulkWriteMode && currentUser)await loadData(true);
   }
 }
-}
 
 
 
 
-
-
-window.addEventListener('load', async () => {
-  try{
-    await startFirebase(firebaseConfig);
-
-    document.getElementById('config-form').style.display='none';
-    document.getElementById('login-form').style.display='block';
-    document.getElementById('login-bina-ad').textContent='AidatPro';
-
-    fbAuth.onAuthStateChanged(async user=>{
-      if(user){
-        try{
-          const snap=await fbDB.collection('kullanicilar')
-            .where('email','==',user.email)
-            .get();
-
-          if(!snap.empty){
-            const kul=snap.docs[0].data();
-
-            currentUser={
-              uid:user.uid,
-              email:user.email,
-              rol:kul.rol||'daire',
-              ad:kul.ad||user.email,
-              tel:kul.tel||'',
-              daireId:kul.daireId||null,
-              kulId:snap.docs[0].id
-            };
-
-            await afterLogin();
-          }else{
-            await fbAuth.signOut();
-            toast('Bu hesap sisteme tanımlı değil.','err');
-          }
-        }catch(e){
-          console.error(e);
-          toast('Kullanıcı bilgileri okunamadı: '+e.message,'err');
-        }
-      }else{
-        currentUser=null;
-        document.getElementById('app').classList.remove('show');
-        document.getElementById('login-screen').style.display='flex';
-        document.getElementById('login-form').style.display='block';
-        document.getElementById('config-form').style.display='none';
-      }
-    });
-
-  }catch(e){
-    console.error(e);
-    toast('Firebase bağlantı hatası: '+e.message,'err');
-  }
-});
 
 
 // ══════════════════════════════════════════
@@ -684,7 +629,6 @@ async function doLogin(){
 
 async function afterLogin(){
   await loadData(true);
-   await loadData(true);
   document.getElementById('login-screen').style.display='none';
   const app=document.getElementById('app');
   app.classList.add('show');
