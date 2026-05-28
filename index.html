@@ -133,10 +133,10 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
 
-    <!-- Giriş formu -->
-    <div id="login-form" style="display:none">
+    <!-- Giriş formu — baştan görünür -->
+    <div id="login-form" style="display:block">
       <div class="fg">
-        <div id="login-bina-ad" style="text-align:center;font-size:13px;color:var(--text2);padding-bottom:8px;border-bottom:1px solid var(--border)"></div>
+        <div id="login-bina-ad" style="text-align:center;font-size:13px;color:var(--text2);padding-bottom:8px;border-bottom:1px solid var(--border)">AidatPro</div>
         <div><label>E-posta</label><input type="email" id="l-email" placeholder="ornek@mail.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
         <div>
           <label>Şifre</label>
@@ -1529,7 +1529,10 @@ function xlExport(rows,name){const ws=XLSX.utils.json_to_sheet(rows);const wb=XL
       toast('⚠️ Bağlantı hatası: '+e.message+' Sayfayı yenileyin.','err');
     }
   } else {
+    // Config yok — config formunu göster, login formunu gizle
     loader(false);
+    document.getElementById('config-form').style.display='block';
+    document.getElementById('login-form').style.display='none';
   }
   document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 })();
