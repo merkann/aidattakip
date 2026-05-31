@@ -361,7 +361,7 @@ tr:last-child td{border-bottom:none}
   <div style="text-align:right;margin-top:12px"><button class="bg" onclick="closeModal('mo-kalem')">Kapat</button></div>
 </div></div>
 
-<div id="mo-kullanici" class="mo"><div class="mo-box" style="max-width:520px">
+<div id="mo-kullanici" class="mo"><div class="mo-box" style="max-width:500px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <h2 id="ku-title">Kullanıcı Ekle</h2><button class="bg bsm" onclick="closeModal('mo-kullanici')">✕</button>
   </div>
@@ -376,13 +376,10 @@ tr:last-child td{border-bottom:none}
       <select id="ku-rol" onchange="toggleDaireSelect()">
         <option value="admin">Admin (Tam Yetki)</option>
         <option value="yonetici">Yönetici (Tam Yetki)</option>
-        <option value="daire">Daire Sakini (Sadece kendi daireleri)</option>
+        <option value="daire">Daire Sakini (Sadece kendi dairesi)</option>
       </select>
     </div>
-    <div id="ku-daire-row" style="display:none">
-      <label>Bağlı Daireler * <span style="font-size:10px;color:var(--text3);text-transform:none;letter-spacing:0">(birden fazla seçilebilir)</span></label>
-      <div id="ku-daire-list" style="max-height:200px;overflow-y:auto;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px"></div>
-    </div>
+    <div id="ku-daire-row" style="display:none"><label>Bağlı Daire *</label><select id="ku-daire"></select></div>
     <div style="display:flex;gap:9px;justify-content:flex-end">
       <button class="bg" onclick="closeModal('mo-kullanici')">İptal</button>
       <button class="bp" onclick="saveKullanici()" id="ku-save-btn">Kaydet</button>
@@ -752,42 +749,16 @@ function showDairePage(){
   const dp=document.getElementById('p-daire');
   if(dp)dp.classList.add('active');
   const u=currentUser;
-  const daireIds=u.daireIds||(u.daireId?[u.daireId]:[]);
-  const daireler=D.uyeler.filter(x=>daireIds.includes(x.id));
-  const toplamBorc=daireIds.reduce((s,did)=>s+D.borclar.filter(b=>b.uyeId===did).reduce((ss,b)=>ss+Number(b.tutar||0),0),0);
-  const toplamTah=daireIds.reduce((s,did)=>s+D.tahsilatlar.filter(t=>t.uyeId===did).reduce((ss,t)=>ss+Number(t.tutar||0),0),0);
-  const toplamKalan=toplamBorc-toplamTah;
+  const daire=D.uyeler.find(x=>x.id===u.daireId);
+  const borc=D.borclar.filter(b=>b.uyeId===u.daireId).reduce((s,b)=>s+Number(b.tutar||0),0);
+  const tah=D.tahsilatlar.filter(t=>t.uyeId===u.daireId).reduce((s,t)=>s+Number(t.tutar||0),0);
+  const kalan=borc-tah;
+  const borList=[...D.borclar].filter(b=>b.uyeId===u.daireId).sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
+  const tahList=[...D.tahsilatlar].filter(t=>t.uyeId===u.daireId).sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
+  // genel gelir gider
   const totT=D.tahsilatlar.reduce((s,t)=>s+Number(t.tutar||0),0);
   const totG=D.giderler.reduce((s,g)=>s+Number(g.tutar||0),0);
   const s=D.settings;
-  const daireTabloHTML=daireler.map(daire=>{
-    const borc=D.borclar.filter(b=>b.uyeId===daire.id).reduce((s,b)=>s+Number(b.tutar||0),0);
-    const tah=D.tahsilatlar.filter(t=>t.uyeId===daire.id).reduce((s,t)=>s+Number(t.tutar||0),0);
-    const kalan=borc-tah;
-    const borList=[...D.borclar].filter(b=>b.uyeId===daire.id).sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
-    const tahList=[...D.tahsilatlar].filter(t=>t.uyeId===daire.id).sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
-    return `<div style="margin-bottom:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-        <div style="font-weight:600;font-size:14px;color:var(--accent)">Daire No: ${esc(daire.daireNo)} — ${esc(daire.ad)}</div>
-        <button class="bp bsm" onclick="dairePDFById('${daire.id}')">📄 PDF</button>
-      </div>
-      <div class="durum-kutu ${kalan>0?'dk-borc':kalan<0?'dk-alacak':'dk-sifir'}" style="margin-bottom:12px">
-        ${kalan>0?`⚠️ Kalan Borç: ${fmt(kalan)}₺`:kalan<0?`✓ Alacak: ${fmt(Math.abs(kalan))}₺`:'✓ Durum: Sıfır'}
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="card" style="padding:0">
-          <div style="padding:10px 14px;font-weight:600;font-size:12px;border-bottom:1px solid var(--border)">Borçlandırma</div>
-          <div class="tw"><table><thead><tr><th>Tarih</th><th>Kalem</th><th>Dönem</th><th>Tutar</th></tr></thead>
-          <tbody>${borList.length?borList.map(b=>`<tr><td style="font-size:11px">${b.tarih||''}</td><td><span class="badge bg-a" style="font-size:10px">${esc(b.cesit||'')}\</span></td><td style="font-size:11px;color:var(--text2)">${esc(b.donem||'—')}</td><td style="font-family:monospace;color:var(--amber);font-size:12px">${fmt(b.tutar)}₺</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3)">Kayıt yok</td></tr>'}</tbody></table></div>
-        </div>
-        <div class="card" style="padding:0">
-          <div style="padding:10px 14px;font-weight:600;font-size:12px;border-bottom:1px solid var(--border)">Ödemeler</div>
-          <div class="tw"><table><thead><tr><th>Tarih</th><th>Çeşit</th><th>Tutar</th></tr></thead>
-          <tbody>${tahList.length?tahList.map(t=>`<tr><td style="font-size:11px">${t.tarih||''}</td><td><span class="badge bg-g" style="font-size:10px">${esc(t.cesit||'')}\</span></td><td style="font-family:monospace;color:var(--green);font-size:12px">${fmt(t.tutar)}₺</td></tr>`).join(''):'<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--text3)">Kayıt yok</td></tr>'}</tbody></table></div>
-        </div>
-      </div>
-    </div>`;
-  }).join('<hr style="border:none;border-top:1px solid var(--border);margin:16px 0">');
   document.getElementById('p-daire').innerHTML=`
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
     <div style="display:flex;align-items:center;gap:10px">
@@ -796,39 +767,59 @@ function showDairePage(){
     </div>
     <button class="bg bsm" onclick="doLogout()" style="color:var(--red)">Çıkış</button>
   </div>
-  <div class="daire-header" style="margin-bottom:16px">
+
+  <div class="daire-header">
     <div class="daire-welcome">Hoş geldiniz, ${esc(u.ad)} 👋</div>
-    <div class="daire-info">${daireler.length} daire · Tel: ${esc(u.tel||'—')}</div>
+    <div class="daire-info">Daire No: <strong>${esc(daire?.daireNo||'?')}</strong> &nbsp;·&nbsp; ${esc(daire?.kullanımTipi||'')} &nbsp;·&nbsp; Tel: ${esc(u.tel||'—')}</div>
+    ${daire?.katMalikiAd?`<div class="daire-info" style="margin-top:4px">Kat Maliki: <strong>${esc(daire.katMalikiAd)}</strong></div>`:''}
   </div>
-  ${daireler.length>1?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:20px">
-    <div class="stat"><div class="stat-v" style="color:var(--amber);font-size:16px">${fmt(toplamBorc)}₺</div><div class="stat-l">Toplam Borç</div></div>
-    <div class="stat"><div class="stat-v" style="color:var(--green);font-size:16px">${fmt(toplamTah)}₺</div><div class="stat-l">Toplam Ödeme</div></div>
-    <div class="stat"><div class="stat-v" style="font-size:16px;color:${toplamKalan>0?'var(--red)':toplamKalan<0?'var(--green)':'var(--text2)'}">${fmt(Math.abs(toplamKalan))}₺</div><div class="stat-l">Genel Durum</div></div>
-  </div>`:''}
-  ${daireTabloHTML}
-  <div class="card" style="margin-top:20px">
-    <div style="font-weight:600;font-size:13px;margin-bottom:14px">Binanın Genel Gelir / Gider Durumu</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:11px">
-      <div class="stat"><div class="stat-v" style="color:var(--green);font-size:15px">${fmt(totT)}₺</div><div class="stat-l">Toplam Tahsilat</div></div>
-      <div class="stat"><div class="stat-v" style="color:var(--red);font-size:15px">${fmt(totG)}₺</div><div class="stat-l">Toplam Gider</div></div>
-      <div class="stat"><div class="stat-v" style="font-size:15px;color:${totT-totG>=0?'var(--green)':'var(--red)'}">${fmt(totT-totG)}₺</div><div class="stat-l">Net Bakiye</div></div>
+
+  <div class="durum-kutu ${kalan>0?'dk-borc':kalan<0?'dk-alacak':'dk-sifir'}">
+    ${kalan>0?`⚠️ Kalan Borcunuz: ${fmt(kalan)}₺`:kalan<0?`✓ Alacağınız: ${fmt(Math.abs(kalan))}₺`:'✓ Borç / Alacak Durumunuz: Sıfır'}
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px;margin-bottom:20px">
+    <div class="stat"><div class="stat-v" style="color:var(--amber);font-size:17px">${fmt(borc)}₺</div><div class="stat-l">Toplam Borç</div></div>
+    <div class="stat"><div class="stat-v" style="color:var(--green);font-size:17px">${fmt(tah)}₺</div><div class="stat-l">Toplam Ödeme</div></div>
+    <div class="stat"><div class="stat-v" style="font-size:17px;color:${kalan>0?'var(--red)':kalan<0?'var(--green)':'var(--text2)'}">${fmt(Math.abs(kalan))}₺</div><div class="stat-l">${kalan>0?'Kalan Borç':kalan<0?'Fazla Ödeme':'Durum'}</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="card" style="padding:0">
+      <div style="padding:12px 16px;font-weight:600;font-size:13px;border-bottom:1px solid var(--border)">Borçlandırma Kayıtları</div>
+      <div class="tw"><table>
+        <thead><tr><th>Tarih</th><th>Kalem</th><th>Dönem</th><th>Tutar</th></tr></thead>
+        <tbody>${borList.length?borList.map(b=>`<tr><td style="font-size:12px">${b.tarih||''}</td><td><span class="badge bg-a">${esc(b.cesit||'')}</span></td><td style="font-size:12px;color:var(--text2)">${esc(b.donem||'—')}</td><td style="font-family:monospace;color:var(--amber);font-weight:600">${fmt(b.tutar)}₺</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text3)">Kayıt yok</td></tr>'}</tbody>
+      </table></div>
     </div>
+    <div class="card" style="padding:0">
+      <div style="padding:12px 16px;font-weight:600;font-size:13px;border-bottom:1px solid var(--border)">Ödeme Kayıtları</div>
+      <div class="tw"><table>
+        <thead><tr><th>Tarih</th><th>Çeşit</th><th>Banka</th><th>Tutar</th></tr></thead>
+        <tbody>${tahList.length?tahList.map(t=>`<tr><td style="font-size:12px">${t.tarih||''}</td><td><span class="badge bg-g">${esc(t.cesit||'')}</span></td><td style="font-size:12px;color:var(--text2)">${esc(t.banka||'—')}</td><td style="font-family:monospace;color:var(--green);font-weight:600">${fmt(t.tutar)}₺</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text3)">Kayıt yok</td></tr>'}</tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:600;font-size:13px;margin-bottom:14px">Binanın Genel Gelir / Gider Durumu</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px">
+      <div class="stat"><div class="stat-v" style="color:var(--green);font-size:16px">${fmt(totT)}₺</div><div class="stat-l">Toplam Tahsilat</div></div>
+      <div class="stat"><div class="stat-v" style="color:var(--red);font-size:16px">${fmt(totG)}₺</div><div class="stat-l">Toplam Gider</div></div>
+      <div class="stat"><div class="stat-v" style="font-size:16px;color:${totT-totG>=0?'var(--green)':'var(--red)'}">${fmt(totT-totG)}₺</div><div class="stat-l">Net Bakiye</div></div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:20px">
+    <button class="bp" onclick="dairePDFSelf()">📄 Kendi Daire Raporumu İndir (PDF)</button>
   </div>`;
 }
 
-function dairePDFById(daireId){
-  const u=D.uyeler.find(x=>x.id===daireId);if(!u)return;
-  document.getElementById('pdf-uye').innerHTML=`<option value="${daireId}">${esc(u.daireNo)} — ${esc(u.ad)}</option>`;
-  document.getElementById('pdf-bas').value='';document.getElementById('pdf-bit').value='';
+function dairePDFSelf(){
+  document.getElementById('pdf-uye').innerHTML=`<option value="${currentUser.daireId}">Benim Dairem</option>`;
+  document.getElementById('pdf-bas').value='';
+  document.getElementById('pdf-bit').value='';
   generateDairePDF();
 }
-
-function dairePDFSelf(){
-  const daireIds=currentUser.daireIds||(currentUser.daireId?[currentUser.daireId]:[]);
-  if(daireIds.length===0){toast('Bağlı daire yok!','err');return;}
-  dairePDFById(daireIds[0]);
-}
-
 
 // ══════════════════════════════════════════
 // UYELER
@@ -1229,53 +1220,37 @@ function openKullaniciModal(id){
   document.getElementById('ku-rol').value=k.rol||'daire';
   document.getElementById('ku-pass-row').style.display=id?'none':'block';
   document.getElementById('ku-save-btn').textContent=id?'Güncelle':'Kaydet';
-  // Daire checkboxları — çoklu seçim
-  const daireIds=k.daireIds||( k.daireId?[k.daireId]:[] );
-  const listEl=document.getElementById('ku-daire-list');
-  listEl.innerHTML=D.uyeler.filter(u=>!u.cikisTarihi)
-    .sort((a,b)=>String(a.daireNo||'').localeCompare(String(b.daireNo||'')))
-    .map(u=>`
-      <label style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;background:var(--bg2);cursor:pointer;font-size:12px;text-transform:none;font-weight:400;letter-spacing:0">
-        <input type="checkbox" class="ku-daire-chk" data-id="${u.id}" ${daireIds.includes(u.id)?'checked':''} style="width:auto;cursor:pointer">
-        <span><strong>${esc(u.daireNo)}</strong> — ${esc(u.ad)}</span>
-      </label>`).join('');
+  // daire select
+  const sel=document.getElementById('ku-daire');
+  sel.innerHTML='<option value="">— Seçin —</option>'+D.uyeler.filter(u=>!u.cikisTarihi).sort((a,b)=>String(a.daireNo||'').localeCompare(String(b.daireNo||''))).map(u=>`<option value="${u.id}">${esc(u.daireNo)} — ${esc(u.ad)}</option>`).join('');
+  if(k.daireId)sel.value=k.daireId;
   toggleDaireSelect();
   openModal('mo-kullanici');
 }
-
 function toggleDaireSelect(){
   const rol=document.getElementById('ku-rol').value;
   document.getElementById('ku-daire-row').style.display=rol==='daire'?'block':'none';
 }
-
 async function saveKullanici(){
   const ad=document.getElementById('ku-ad').value.trim();
   const email=document.getElementById('ku-mail').value.trim();
   const pass=document.getElementById('ku-pass').value;
   const rol=document.getElementById('ku-rol').value;
+  const daireId=document.getElementById('ku-daire').value;
   const tel=document.getElementById('ku-tel').value.trim();
-  // Seçili daireleri topla
-  const daireIds=rol==='daire'
-    ?[...document.querySelectorAll('.ku-daire-chk:checked')].map(c=>c.dataset.id)
-    :[];
   if(!email){toast('E-posta zorunludur!','err');return;}
   if(!editingKulId&&!pass){toast('Şifre zorunludur!','err');return;}
-  if(rol==='daire'&&daireIds.length===0){toast('En az bir daire seçin!','err');return;}
-  loader(true,'Kullanıcı kaydediliyor...');
+  if(rol==='daire'&&!daireId){toast('Daire Sakini için daire seçin!','err');return;}
+  loader(true);
   try{
     if(!editingKulId){
+      // create firebase auth user
       const cred=await fbAuth.createUserWithEmailAndPassword(email,pass);
-      const kulItem={id:cred.user.uid,ad,email,tel,rol,
-        daireIds,
-        daireId:daireIds[0]||'', // geriye dönük uyumluluk
-        uid:cred.user.uid};
+      const kulItem={id:cred.user.uid,ad,email,tel,rol,daireId:rol==='daire'?daireId:'',uid:cred.user.uid};
       await fbSet('kullanicilar',cred.user.uid,kulItem);
       toast('Kullanıcı oluşturuldu ✓');
     } else {
-      const mevcut=D.kullanicilar.find(x=>x.id===editingKulId)||{};
-      const kulItem={...mevcut,ad,tel,rol,
-        daireIds,
-        daireId:daireIds[0]||''};
+      const kulItem={...D.kullanicilar.find(x=>x.id===editingKulId),ad,tel,rol,daireId:rol==='daire'?daireId:''};
       await fbSet('kullanicilar',editingKulId,kulItem);
       toast('Kullanıcı güncellendi ✓');
     }
